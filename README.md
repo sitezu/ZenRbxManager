@@ -61,6 +61,8 @@ The repository exists at `sitezu/ZenRbxManager`, but Pages is not live until the
 
 ## Publish to your GitHub account
 
+See the step-by-step [publishing guide](PUBLISH.md) for PowerShell, GitHub Pages setup, and verification.
+
 The public repository `sitezu/ZenRbxManager` already exists with an initial README commit. The local workspace copy has been merged with that initial commit, so it can be pushed normally once authenticated:
 
 ```bash
