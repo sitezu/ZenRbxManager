@@ -25,13 +25,13 @@ An independent Windows account workspace for the Roblox accounts **you own**. Ke
 
 ## A better place for the accounts you actually use
 
-One account for one game, another for a different group, and a third you haven't touched in months. ZenRbxManager gives those accounts a home: a clean list, useful context, and launch controls in a **real Windows desktop window with the original HTML/CSS UI embedded edge to edge**. No separate Edge/Chrome app-mode window or fake outer frame.
+One account for one game, another for a different group, and a third you haven't touched in months. ZenRbxManager gives those accounts a home: a clean list, useful context, and launch controls in a **real frameless Windows desktop window with the original HTML/CSS UI filling it edge to edge**. The supplied header and rounded border are part of that window, not a floating web card. No separate Edge/Chrome app-mode window.
 
 <img src="site/readme-features.png" alt="Six ZenRbxManager features: account list, launching, notes, settings, local storage and honest presence" width="100%">
 
 ### See the workspace
 
-These are **real captures of the original HTML UI**, which the Windows desktop window renders through WebView2. They are not a populated demo account; Windows supplies the actual OS title bar. No credentials or account cookies appear in them.
+These are **real captures of the original HTML UI**, which the Windows desktop window renders through WebView2. They are not a populated demo account. The original header replaces the OS title bar, with working minimize/close buttons in the desktop app. No credentials or account cookies appear in them.
 
 <img src="site/app-preview.webp" alt="The full-viewport ZenRbxManager workspace with account list, filters and launch controls" width="100%">
 
@@ -72,7 +72,7 @@ This **per-user Inno Setup candidate** adds a Start Menu shortcut, offers an opt
 
 ## The original UI, inside a desktop window
 
-The current candidate uses your **original HTML/CSS interface** in an embedded **Microsoft Edge WebView2** control hosted by a Windows desktop window. It is a web renderer **inside** the app, not a separate browser tab or an `--app` Edge/Chrome window. The interface fills its client area, while Windows supplies the real title bar. A token-protected loopback API connects it to the existing Python backend. **WebView2 Runtime must be installed** (separate from the Edge browser); if missing, install Microsoft's Evergreen WebView2 Runtime. Roblox's optional website sign-in may open a separate browser. The runtime, Roblox, optional WebDriver and saved data are outside the executable size limit. The published `v0.1.0-preview` still uses the older external-browser-shell launcher.
+The current candidate uses your **original HTML/CSS interface** in an embedded **Microsoft Edge WebView2** control hosted by a Windows desktop window. It is a web renderer **inside** the app, not a separate browser tab or an `--app` Edge/Chrome window. The interface fills a frameless window; its original header, working minimize/close buttons and rounded border replace the OS title bar. A subtle corner grip allows resizing. A token-protected loopback API connects it to the existing Python backend. **WebView2 Runtime must be installed** (separate from the Edge browser); if missing, install Microsoft's Evergreen WebView2 Runtime. Roblox's optional website sign-in may open a separate browser. The runtime, Roblox, optional WebDriver and saved data are outside the executable size limit. The published `v0.1.0-preview` still uses the older external-browser-shell launcher.
 
 | What matters | How it works |
 |:--|:--|

@@ -147,4 +147,26 @@ def test_desktop_host_forces_embedded_webview2():
     assert "webview.start(inspect, gui='edgechromium'" in source
     assert 'subprocess.Popen' not in source
     assert '--app=' not in source
+    assert 'frameless=True, transparent=True' in source
+    assert "DRAG_REGION_DIRECT_TARGET_ONLY'] = True" in source
+    assert 'class DesktopWindowControls:' in source
     assert "server = make_server(backend)" in source
+
+
+def test_native_window_controls_call_actual_host_methods():
+    from main import DesktopWindowControls
+
+    class FakeWindow:
+        def __init__(self):
+            self.calls = []
+
+        def minimize(self): self.calls.append('minimize')
+        def destroy(self): self.calls.append('close')
+        def resize(self, width, height): self.calls.append(('resize', width, height))
+
+    bridge = DesktopWindowControls()
+    bridge.window = FakeWindow()
+    bridge.minimize()
+    bridge.resize(100, 5000)
+    bridge.close()
+    assert bridge.window.calls == ['minimize', ('resize', 900, 2160), 'close']

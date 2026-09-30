@@ -1,6 +1,6 @@
 ## ZenRbxManager — original-UI desktop candidate (not released)
 
-The current `main` branch replaces the earlier Edge/Chrome app-mode shell with a **desktop window with the original HTML/CSS UI embedded in Microsoft WebView2**. It preserves the dark two-column account layout, filters, notes, launches, themes, and settings, with the Python backend behind a token-protected local API. The app no longer opens a separate Edge/Chrome `--app` window. Roblox browser sign-in is a separate, optional flow.
+The current `main` branch replaces the earlier Edge/Chrome app-mode shell with a **desktop window with the original HTML/CSS UI embedded in Microsoft WebView2**. It preserves the dark two-column account layout, filters, notes, launches, themes, and settings, with the Python backend behind a token-protected local API. The app no longer opens a separate Edge/Chrome `--app` window. Roblox browser sign-in is a separate, optional flow. The original custom header now replaces the OS title bar: its minimize/close controls operate the native window, and the original thin rounded border surrounds the edge-to-edge workspace. A corner grip allows resizing.
 
 ### Before any new release
 

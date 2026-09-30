@@ -32,7 +32,7 @@ g.ellipse((720, -390, 1570, 460), fill=(115, 72, 247, 120))
 g.ellipse((-470, 180, 370, 1010), fill=(74, 66, 191, 75))
 base = Image.alpha_composite(base.convert('RGBA'), glow.filter(ImageFilter.GaussianBlur(130)))
 
-# The real UI, shown directly; no fake browser header, bevel, border, or window frame.
+# The real UI, shown directly; its header and border are part of the window, not a mock frame.
 shot = Image.open(ROOT / 'site/app-preview.webp').convert('RGBA')
 shot.thumbnail((740, 530), Image.Resampling.LANCZOS)
 base.alpha_composite(shot, (650, 136))

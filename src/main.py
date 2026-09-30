@@ -85,6 +85,36 @@ def make_server(backend, port=0):
     return ThreadingHTTPServer(('127.0.0.1', port), Handler)
 
 
+class DesktopWindowControls:
+    """Expose only native window actions to the original HTML header."""
+
+    def __init__(self):
+        self.window = None
+
+    def minimize(self):
+        self.window.minimize()
+
+    def close(self):
+        self.window.destroy()
+
+    def resize(self, width, height):
+        # The WinForms frameless window has no native resize frame. The small
+        # bottom-right grip restores resizing without showing an OS title bar.
+        width, height = int(width), int(height)
+        self.window.resize(max(900, min(width, 4096)), max(600, min(height, 2160)))
+
+
+def create_desktop_window(webview, url, *, smoke=False):
+    controls = DesktopWindowControls()
+    controls.window = webview.create_window(
+        'ZenRbxManager UI check' if smoke else 'ZenRbxManager',
+        url=url, width=1000 if smoke else 1180, height=650 if smoke else 760,
+        min_size=(900, 600), frameless=True, transparent=True,
+        easy_drag=False, background_color='#090a0f', js_api=controls,
+    )
+    return controls.window
+
+
 def run_self_test():
     """Exercise bundled UI + local API without Roblox, browser or saved accounts.
 
@@ -146,10 +176,7 @@ def run_ui_smoke_test():
         server = make_server(backend)
         worker = threading.Thread(target=server.serve_forever, daemon=True)
         worker.start()
-        window = webview.create_window('ZenRbxManager UI check',
-                                       url=f'http://127.0.0.1:{server.server_port}/',
-                                       width=1000, height=650, background_color='#090a0f',
-                                       easy_drag=False)
+        window = create_desktop_window(webview, f'http://127.0.0.1:{server.server_port}/', smoke=True)
         checks = []
 
         def inspect():
@@ -162,11 +189,23 @@ def run_ui_smoke_test():
                       title: document.querySelector('h1')?.textContent,
                       empty: !!document.getElementById('emptyStateNotice'),
                       root: !!document.getElementById('widget'),
-                      fakeControls: !!document.querySelector('.window-controls')
+                      controls: document.querySelectorAll('.window-controls button').length,
+                      border: getComputedStyle(document.getElementById('widget')).borderTopColor,
+                      rounded: getComputedStyle(document.getElementById('widget')).borderTopLeftRadius,
+                      bridge: !!window.pywebview?.api?.minimize && !!window.pywebview?.api?.close,
+                      transparent: document.documentElement.classList.contains('desktop-host')
                     }))()""")
                     if state and state.get('empty'):
                         assert state['title'] == 'ZENRBXMANAGER' and state['root']
-                        assert not state['fakeControls']
+                        assert state['controls'] == 2
+                        assert state['border'] == 'rgb(29, 35, 49)' and state['rounded'] == '16px'
+                        assert state['bridge'] and state['transparent']
+                        window.evaluate_js("document.querySelector('[aria-label=\"Minimize window\"]').click()")
+                        if not window.events.minimized.wait(8):
+                            raise RuntimeError('Original header did not minimize the native window.')
+                        window.restore()
+                        if not window.events.restored.wait(8):
+                            raise RuntimeError('Native window could not be restored.')
                         checks.append(True)
                         return
                     time.sleep(.25)
@@ -178,6 +217,7 @@ def run_ui_smoke_test():
 
         try:
             # No fallback to MSHTML or an external browser.
+            webview.settings['DRAG_REGION_DIRECT_TARGET_ONLY'] = True
             webview.start(inspect, gui='edgechromium', private_mode=True)
             if checks != [True]:
                 raise RuntimeError(f'WebView2 GUI smoke test failed: {checks!r}')
@@ -212,9 +252,9 @@ def main():
         worker.start()
         try:
             url = f'http://127.0.0.1:{server.server_port}/'
-            webview.create_window('ZenRbxManager', url=url, width=1180, height=760,
-                                  min_size=(900, 600), maximized=True, easy_drag=False,
-                                  background_color='#090a0f')
+            create_desktop_window(webview, url)
+            # Drag only the empty header area, never its working controls.
+            webview.settings['DRAG_REGION_DIRECT_TARGET_ONLY'] = True
             # No external browser shell. Fail rather than fall back to MSHTML/IE.
             webview.start(gui='edgechromium', private_mode=True)
         finally:

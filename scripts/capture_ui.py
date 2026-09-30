@@ -1,4 +1,4 @@
-"""Capture the legacy HTML design reference, NOT the current native app.
+"""Capture the original HTML interface used inside the desktop WebView2 host.
 
 Requires Playwright Chromium. Mocks only the account API: no user data, cookies,
 Roblox traffic or external resources are used.
@@ -29,12 +29,15 @@ try:
         box = page.locator('#widget').bounding_box()
         assert box == {'x': 0, 'y': 0, 'width': 1200, 'height': 760}, box
         assert page.locator('h1').inner_text() == 'ZENRBXMANAGER'
-        assert page.locator('.window-controls').count() == 0
+        assert page.locator('.window-controls button').count() == 2
         assert page.evaluate("getComputedStyle(document.body).backgroundColor") == 'rgb(9, 10, 15)'
+        assert page.locator('#widget').evaluate('(el) => getComputedStyle(el).borderTopLeftRadius') == '16px'
+        assert page.locator('#widget').evaluate('(el) => getComputedStyle(el).borderTopColor') == 'rgb(29, 35, 49)'
         header = page.locator('#widget > header').bounding_box()
         workspace = page.locator('#widget > main').bounding_box()
-        assert header['x'] == 0 and header['y'] == 0 and header['width'] == 1200
-        assert workspace['y'] == header['height'] and workspace['height'] + header['height'] == 760
+        assert header['x'] == 1 and header['y'] == 1 and header['width'] == 1198
+        assert workspace['y'] == header['y'] + header['height']
+        assert workspace['height'] + header['height'] + 2 == 760
         assert page.locator('.account-panel').is_visible() and page.locator('.execution-panel').is_visible()
         page.screenshot(path=str(ROOT / 'site/app-preview.webp'), type='webp', quality=88)
         page.locator('button[onclick="openSettingsModal()"]:visible').click()

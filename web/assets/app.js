@@ -1,6 +1,53 @@
 /* ZenRbxManager: real account state, no prototype demo records. */
 'use strict';
 const $ = id => document.getElementById(id);
+// Only pywebview's desktop bridge may control the real OS window. In a static
+// browser preview the original header remains visual, but the buttons do not
+// pretend to minimize/close the browser tab.
+function desktopWindow(action) {
+  const bridge = window.pywebview?.api;
+  if (!bridge || !['minimize', 'close'].includes(action)) return;
+  bridge[action]().catch(() => toast('Window action unavailable.', true));
+}
+function initializeDesktopChrome() {
+  if (!window.pywebview?.api) return;
+  document.documentElement.classList.add('desktop-host');
+}
+window.addEventListener('pywebviewready', initializeDesktopChrome);
+initializeDesktopChrome();
+const resizeGrip = $('windowResizeGrip');
+resizeGrip.addEventListener('pointerdown', event => {
+  if (event.button !== 0 || !window.pywebview?.api) return;
+  event.preventDefault();
+  resizeGrip.setPointerCapture(event.pointerId);
+  const startX = event.screenX, startY = event.screenY;
+  const startWidth = window.innerWidth, startHeight = window.innerHeight;
+  let updating = false, pending = null;
+  async function applySize() {
+    if (updating || !pending) return;
+    updating = true;
+    const [width, height] = pending;
+    pending = null;
+    try { await window.pywebview.api.resize(width, height); }
+    catch { /* The grip stays optional if window sizing is unavailable. */ }
+    updating = false;
+    if (pending) applySize();
+  }
+  const move = e => {
+    pending = [Math.max(900, startWidth + e.screenX - startX),
+               Math.max(600, startHeight + e.screenY - startY)];
+    applySize();
+  };
+  const stop = () => {
+    resizeGrip.removeEventListener('pointermove', move);
+    resizeGrip.removeEventListener('pointerup', stop);
+    resizeGrip.removeEventListener('pointercancel', stop);
+    if (resizeGrip.hasPointerCapture(event.pointerId)) resizeGrip.releasePointerCapture(event.pointerId);
+  };
+  resizeGrip.addEventListener('pointermove', move);
+  resizeGrip.addEventListener('pointerup', stop);
+  resizeGrip.addEventListener('pointercancel', stop);
+});
 let appState = {accounts:[], settings:{}};
 let selectedName = null, editName = null, hiddenNames = false, filter = 'all', noteTimer = null, toastTimer = null, dragged = null;
 const palette = {

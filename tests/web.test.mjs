@@ -90,22 +90,43 @@ test('account names from state render as text rather than HTML', async () => {
 });
 
 
-test('workspace occupies the window without fake chrome or a grid desktop', async () => {
+test('original custom header and rounded border fill the native window', async () => {
   const { dom, window } = createApp();
   try {
     await settle();
     const doc = window.document;
     assert.equal(doc.querySelector('h1').textContent, 'ZENRBXMANAGER');
+    assert.ok(doc.querySelector('header.pywebview-drag-region'));
     assert.ok(doc.querySelector('main.workspace > section.account-panel'));
     assert.ok(doc.querySelector('main.workspace > aside.execution-panel'));
-    assert.equal(doc.querySelector('.window-controls'), null);
-    assert.equal(doc.querySelector('[onclick^="windowAction"]'), null);
+    const controls = [...doc.querySelectorAll('.window-controls button')];
+    assert.equal(controls.length, 2);
+    assert.deepEqual(controls.map(button => button.getAttribute('aria-label')),
+      ['Minimize window', 'Close application']);
     assert.equal(doc.querySelector('#widget').classList.contains('rounded-2xl'), false);
     assert.ok(html.includes('#widget {width:100%;height:100%;'), 'the app fills the viewport');
+    assert.match(html, /border:1px solid #1d2331;border-radius:16px/);
     assert.match(html, /background-image:none !important/);
+    assert.ok(doc.getElementById('windowResizeGrip'));
   } finally { dom.window.close(); }
 });
 
+test('native header controls call the desktop bridge, never mock toasts', async () => {
+  const { dom, window } = createApp();
+  const calls = [];
+  try {
+    await settle();
+    window.pywebview = { api: {
+      minimize: async () => { calls.push('minimize'); },
+      close: async () => { calls.push('close'); },
+    }};
+    window.dispatchEvent(new window.Event('pywebviewready'));
+    assert.ok(window.document.documentElement.classList.contains('desktop-host'));
+    for (const button of window.document.querySelectorAll('.window-controls button')) button.click();
+    await settle();
+    assert.deepEqual(calls, ['minimize', 'close']);
+  } finally { dom.window.close(); }
+});
 
 test('single-file HTML embeds the canonical app logic and font without remote assets', () => {
   const embedded = html.match(/<!-- BEGIN EMBEDDED APP SCRIPT -->\s*<script>\s*([\s\S]*?)\s*<\/script>\s*<!-- END EMBEDDED APP SCRIPT -->/);
