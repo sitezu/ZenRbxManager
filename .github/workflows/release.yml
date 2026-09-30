@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -27,16 +27,21 @@ jobs:
         run: python -m pip install -e '.[build,test]'
       - name: Check original HTML design reference
         run: npm ci --ignore-scripts && npm test
-      - name: Check native UI, backend and website
+      - name: Check UI, backend and website
         run: python -m pytest -q
       - name: Build portable Windows executable
         run: >-
           pyinstaller --noconfirm --clean --onefile --windowed --name ZenRbxManager
-          --icon assets-icon.ico
-          --exclude-module matplotlib --exclude-module numpy
+          --icon assets-icon.ico --add-data "web;web" --collect-all webview --hidden-import clr
+          --exclude-module tkinter --exclude-module matplotlib --exclude-module numpy
           --exclude-module pandas --exclude-module scipy --exclude-module PySide6
           --exclude-module PyQt6 --exclude-module IPython
           src/main.py
+      - name: Verify original UI renders in WebView2
+        shell: pwsh
+        run: |
+          $app = Start-Process -FilePath (Resolve-Path 'dist/ZenRbxManager.exe') -ArgumentList '--ui-smoke-test' -Wait -PassThru
+          if ($app.ExitCode -ne 0) { throw "WebView2 desktop UI smoke test failed ($($app.ExitCode))" }
       - name: Name executable, check size and write SHA-256
         shell: pwsh
         run: |
@@ -76,6 +81,8 @@ jobs:
           if (-not (Test-Path $app)) { throw 'Installed EXE missing' }
           $smoke = Start-Process -FilePath $app -ArgumentList '--self-test' -Wait -PassThru
           if ($smoke.ExitCode -ne 0) { throw "Installed app self-test failed ($($smoke.ExitCode))" }
+          $gui = Start-Process -FilePath $app -ArgumentList '--ui-smoke-test' -Wait -PassThru
+          if ($gui.ExitCode -ne 0) { throw "Installed WebView2 UI smoke test failed ($($gui.ExitCode))" }
           $uninstall = Join-Path $folder 'unins000.exe'
           if (-not (Test-Path $uninstall)) { throw 'Uninstaller missing' }
           $remove = Start-Process -FilePath $uninstall -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru

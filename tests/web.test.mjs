@@ -101,7 +101,7 @@ test('workspace occupies the window without fake chrome or a grid desktop', asyn
     assert.equal(doc.querySelector('.window-controls'), null);
     assert.equal(doc.querySelector('[onclick^="windowAction"]'), null);
     assert.equal(doc.querySelector('#widget').classList.contains('rounded-2xl'), false);
-    assert.ok(html.includes('#widget { width:100vw; height:100vh;'), 'the app fills the viewport');
+    assert.ok(html.includes('#widget {width:100%;height:100%;'), 'the app fills the viewport');
     assert.match(html, /background-image:none !important/);
   } finally { dom.window.close(); }
 });

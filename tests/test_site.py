@@ -51,15 +51,16 @@ def test_website_has_real_product_copy_and_valid_internal_links():
 
 def test_html_visual_reference_keeps_original_ui():
     html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
-    assert 'ZenTask-inspired visual layer' in html
-    assert 'linear-gradient(135deg,#6366f1,#a855f7)' in html
+    assert 'Original supplied interface' in html
+    assert "font-family:'Plus Jakarta Sans'" in html
+    assert (ROOT / 'web/assets/Plus-Jakarta-Sans-OFL.txt').exists()
     assert '<!-- BEGIN EMBEDDED APP SCRIPT -->' in html
     assert '<script src=' not in html
     assert 'width: 100vw;' in html and 'height: 100vh;' in html
     assert 'background-color: #090a0f;' in html
     assert '/*ZEN_TOKEN*/' not in html
     assert 'id="accountList"' in html
-    assert (ROOT / 'src/native_ui.py').exists()
+    assert "webview.start(gui='edgechromium'" in (ROOT / 'src/main.py').read_text()
     assert 'data-username="ZenMaster99"' not in html
 
 
