@@ -114,9 +114,10 @@ def run_self_test():
             if not match or 'ZenRbxManager' not in html:
                 raise RuntimeError('Bundled desktop HTML did not load.')
             session_token = json.loads(match.group(1))
-            with urllib.request.urlopen(base + '/assets/app.js', timeout=8) as response:
-                if b'updateState' not in response.read():
-                    raise RuntimeError('Bundled UI JavaScript did not load.')
+            if ('<!-- BEGIN EMBEDDED APP SCRIPT -->' not in html or
+                    'function updateState(state)' not in html or
+                    '<script src=' in html):
+                raise RuntimeError('Self-contained desktop UI JavaScript did not load.')
             request = urllib.request.Request(base + '/api/state', data=b'{}', method='POST', headers={
                 'Content-Type': 'application/json', 'Origin': base, 'X-Zen-Token': session_token,
             })

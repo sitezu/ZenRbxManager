@@ -95,7 +95,7 @@ python src/main.py
 python -m pytest -q
 ```
 
-Frontend tests: `npm ci --ignore-scripts && npm test`. To regenerate the empty-state visuals on a machine with Playwright Chromium and Pillow: `python scripts/capture_ui.py`, then `python scripts/make_banner.py` and `python scripts/make_readme_visuals.py`. These screenshots mock an **empty local state**, never a real account.
+The application UI is a **single self-contained file** at [`web/index.html`](web/index.html): styles, icon font and interactive JavaScript are embedded. It still needs the local Python backend for account operations. When changing [`web/assets/app.js`](web/assets/app.js), run `python scripts/embed_app_js.py` to refresh the inlined copy; the frontend tests reject out-of-sync copies. Frontend tests: `npm ci --ignore-scripts && npm test`. To regenerate the empty-state visuals on a machine with Playwright Chromium and Pillow: `python scripts/capture_ui.py`, then `python scripts/make_banner.py` and `python scripts/make_readme_visuals.py`. These screenshots mock an **empty local state**, never a real account.
 
 <details>
 <summary><b>How are releases tested?</b></summary>

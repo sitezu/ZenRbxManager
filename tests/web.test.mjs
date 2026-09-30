@@ -16,10 +16,7 @@ function createApp() {
     accounts: structuredClone(originalAccounts),
     settings: { theme: 'rose', bloxstrap: false, browser: 'edge', startup: false, delay: 0.5, order: [] },
   };
-  const injected = html
-    .replace('const ZEN_TOKEN = "__ZEN_TOKEN__";', 'const ZEN_TOKEN = "test-token";')
-    .replace('<script src="/assets/app.js" defer></script>', '')
-    .replace('</body>', `<script>${script}</script></body>`);
+  const injected = html.replace('const ZEN_TOKEN = "__ZEN_TOKEN__";', 'const ZEN_TOKEN = "test-token";');
   const dom = new JSDOM(injected, {
     url: 'http://127.0.0.1:8800/', runScripts: 'dangerously', pretendToBeVisual: true,
     beforeParse(window) {
@@ -104,7 +101,38 @@ test('workspace occupies the window without fake chrome or a grid desktop', asyn
     assert.equal(doc.querySelector('.window-controls'), null);
     assert.equal(doc.querySelector('[onclick^="windowAction"]'), null);
     assert.equal(doc.querySelector('#widget').classList.contains('rounded-2xl'), false);
-    assert.match(html, /\.widget-container \{ width:100%; height:100%;/);
+    assert.ok(html.includes('#widget { width:100vw; height:100vh;'), 'the app fills the viewport');
     assert.match(html, /background-image:none !important/);
+  } finally { dom.window.close(); }
+});
+
+
+test('single-file HTML embeds the canonical app logic and font without remote assets', () => {
+  const embedded = html.match(/<!-- BEGIN EMBEDDED APP SCRIPT -->\s*<script>\s*([\s\S]*?)\s*<\/script>\s*<!-- END EMBEDDED APP SCRIPT -->/);
+  assert.ok(embedded, 'embedded application logic exists');
+  assert.equal(embedded[1].trim(), script.trim(), 'embedded JS is in sync with source');
+  assert.ok(html.includes('data:font/woff2;base64,'), 'icon font is inline');
+  assert.ok(!/<script\s+src=|<link\s+[^>]*href=/.test(html), 'no external script or stylesheet');
+});
+
+
+test('all account and destination dialogs still open with inlined handlers', async () => {
+  const { dom, window } = createApp();
+  try {
+    await settle();
+    const visible = id => !window.document.getElementById(id).classList.contains('hidden');
+    window.openAddAccountModal(); assert.ok(visible('addAccountModal'));
+    window.switchAddTab('cookie');
+    assert.ok(!window.document.getElementById('addCookieSection').classList.contains('hidden'));
+    window.closeAddAccountModal(); assert.ok(!visible('addAccountModal'));
+    window.openPlaceModal(); assert.ok(visible('placeModal'));
+    window.closePlaceModal(); assert.ok(!visible('placeModal'));
+    window.openEditModal('Alpha'); assert.ok(visible('editModal'));
+    assert.equal(window.document.getElementById('editAlias').value, 'Main');
+    window.closeEditModal(); assert.ok(!visible('editModal'));
+    window.openSettingsModal(); assert.ok(visible('settingsModal'));
+    window.closeSettingsModal(); assert.ok(!visible('settingsModal'));
+    window.setStatusFilter('online');
+    assert.equal(window.document.querySelectorAll('.account-row[style*="display: none"]').length, 1);
   } finally { dom.window.close(); }
 });

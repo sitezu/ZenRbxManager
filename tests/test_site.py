@@ -53,7 +53,10 @@ def test_desktop_visual_layer_keeps_functional_ui():
     html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
     assert 'ZenTask-inspired visual layer' in html
     assert 'linear-gradient(135deg,#6366f1,#a855f7)' in html
-    assert '<script src="/assets/app.js" defer>' in html
+    assert '<!-- BEGIN EMBEDDED APP SCRIPT -->' in html
+    assert '<script src=' not in html
+    assert 'width: 100vw;' in html and 'height: 100vh;' in html
+    assert 'background-color: #090a0f;' in html
     assert '/*ZEN_TOKEN*/' not in html
     assert 'id="accountList"' in html
     assert 'data-username="ZenMaster99"' not in html
