@@ -18,7 +18,7 @@ async function api(kind, body={}) {
  const result=await response.json(); if(!response.ok) throw Error(result.error||'Request failed'); return result;
 }
 async function execute(kind, body={}, callback) {
- try { const result=await api(kind,body); if(result.state) updateState(result.state);
+ try { const result=await api(kind,body); if(kind==='state') updateState(result); else if(result.state) updateState(result.state);
    if(result.message) toast(result.message); if(callback) await callback(result); return result;
  } catch(e) { toast(e.message,true); return null; }
 }

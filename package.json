@@ -1,0 +1,11 @@
+{
+  "name": "zenrbxmanager-ui-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/web.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

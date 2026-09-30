@@ -40,6 +40,8 @@ def test_website_has_real_product_copy_and_valid_internal_links():
     assert 'Macro recorder' not in html and 'Auto clicker' not in html
     assert '0/68' not in html and 'ZenTask-Setup' not in html
     assert 'https://github.com/sitezu/ZenRbxManager' in page.hrefs
+    assert 'ZenRbxManager-v0.1.0-preview.exe' in html
+    assert 'This is a preview' in html
     assert 'sitezu.github.io/ZenRbxManager/' in html
     assert all(href[1:] in page.ids for href in page.hrefs if href.startswith('#'))
     assert '/*REFERENCE_CSS*/' not in html

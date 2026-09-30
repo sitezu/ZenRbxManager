@@ -1,0 +1,68 @@
+name: Build and publish Windows preview release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # Manual dispatch must be run from a version tag, not main.
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: python -m pip install -e '.[build,test]'
+      - name: Check frontend behavior
+        run: npm ci --ignore-scripts && npm test
+      - name: Check backend and website
+        run: python -m pytest -q
+      - name: Build portable Windows executable
+        run: >-
+          pyinstaller --noconfirm --clean --onefile --windowed --name ZenRbxManager
+          --icon assets-icon.ico --add-data "web;web"
+          --exclude-module tkinter --exclude-module matplotlib --exclude-module numpy
+          --exclude-module pandas --exclude-module scipy --exclude-module PySide6
+          --exclude-module PyQt6 --exclude-module IPython
+          src/main.py
+      - name: Name executable, check size and write SHA-256
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $name = "ZenRbxManager-$tag.exe"
+          Move-Item dist/ZenRbxManager.exe "dist/$name"
+          $file = Get-Item "dist/$name"
+          Write-Host "Windows executable size: $($file.Length) bytes"
+          if ($file.Length -ge 100000000) { throw "Release executable exceeds 100 MB" }
+          $hash = (Get-FileHash "dist/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $name" | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZenRbxManager-${{ github.ref_name }}
+          path: |
+            dist/ZenRbxManager-${{ github.ref_name }}.exe
+            dist/SHA256SUMS.txt
+      - name: Publish preview release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ZenRbxManager ${{ github.ref_name }} (preview)
+          prerelease: true
+          draft: false
+          body_path: RELEASE_NOTES.md
+          files: |
+            dist/ZenRbxManager-${{ github.ref_name }}.exe
+            dist/SHA256SUMS.txt
+            LICENSE

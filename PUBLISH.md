@@ -1,39 +1,19 @@
-# Put ZenRbxManager on GitHub Pages
+# Website and preview releases
 
-The website is ready in `site/index.html`, and the app is in `src/` and `web/`. GitHub currently has only the starter README; the new files are **not online yet**. The old and newly posted GitHub tokens were exposed in chat. Revoke both and do not use or paste them again.
+The site is published at **https://sitezu.github.io/ZenRbxManager/** from the `site/` directory by [the Pages workflow](.github/workflows/pages.yml). Changes to `site/` on `main` deploy automatically. The downloadable app is a **Windows preview** until a real Roblox login and launch have been verified on Windows.
 
-## Option A: push the prepared local Git repository
+## How to publish another preview
 
-If you are working in the original workspace where this project was built, it has already been merged with the existing `sitezu/ZenRbxManager` starter commit and `origin` points at the right URL. After signing in to GitHub on your own computer, run:
+1. Make and test changes on `main`. Run `python -m pytest -q` and `npm ci && npm test` locally. The [Windows build workflow](.github/workflows/windows-build.yml) must pass too.
+2. Update `RELEASE_NOTES.md`, the versioned download link in `site/index.html`, and the release link in `README.md` to the tag you are about to create. Keep the preview warning if live account flows remain unverified.
+3. Commit and push. Tag that exact tested commit, e.g. `git tag v0.1.1-preview && git push origin v0.1.1-preview`.
+4. [The release workflow](.github/workflows/release.yml) builds a Windows EXE, runs Python and frontend tests, fails if the EXE is **100,000,000 bytes or larger**, writes a SHA-256 checksum, and uploads the EXE, checksum, and GPL license to a prerelease.
+5. Check the [release page](https://github.com/sitezu/ZenRbxManager/releases), download the asset, verify its checksum, and test it on Windows with accounts you own before calling it stable.
 
-```bash
-git -C ZenRbxManager push -u origin main
-```
+## How the website is published
 
-The CLI device-sign-in attempt from this sandbox failed due to a connection reset on GitHub's OAuth endpoint. No credentials are saved in the project.
+The Pages workflow uploads **only `site/`**, not your desktop app data or source dependencies. To redeploy, push a site change to `main` or run the workflow manually under GitHub Actions. GitHub Pages must be configured in the repository's **Settings → Pages → Build and deployment → GitHub Actions**.
 
-## Option B: publish from the downloadable ZIP (Windows PowerShell)
+## Security
 
-1. Download `ZenRbxManager-repository.zip` and extract it somewhere, such as `Downloads\ZenRbxManager-repository\ZenRbxManager`.
-2. Open PowerShell. Replace `$source` with the path to the **extracted inner** `ZenRbxManager` folder:
-
-```powershell
-$source = "$env:USERPROFILE\Downloads\ZenRbxManager-repository\ZenRbxManager"
-git clone https://github.com/sitezu/ZenRbxManager.git
-Get-ChildItem -LiteralPath $source -Force | Copy-Item -Destination .\ZenRbxManager -Recurse -Force
-Set-Location .\ZenRbxManager
-git add -A
-git commit -m "Add ZenRbxManager app and website"
-git push origin main
-```
-
-You will sign in through Git on your computer if prompted. Do not put a personal access token in a command or a remote URL. If `git` is not installed, install [Git for Windows](https://git-scm.com/download/win) first. You can also use GitHub Desktop to clone the existing repo, copy the extracted files into it, commit, and publish the commit.
-
-## Turn on GitHub Pages
-
-1. Open [the ZenRbxManager repository settings](https://github.com/sitezu/ZenRbxManager/settings/pages).
-2. Under **Build and deployment**, choose **Source: GitHub Actions**.
-3. Go to [Actions → Publish ZenRbxManager website](https://github.com/sitezu/ZenRbxManager/actions/workflows/pages.yml). If no run started after the push, click **Run workflow** on `main`.
-4. Once deployment succeeds, visit **https://sitezu.github.io/ZenRbxManager/**. It will return 404 until the page is deployed.
-
-The Windows app build is a separate GitHub Actions workflow. It tests the source and fails if a built executable is 100 MB or larger. Passing CI is not a substitute for testing a real Roblox login and launch on Windows. Do not publish an executable as a release until you have tested it.
+Do not include authentication cookies, account exports, GitHub tokens, or temporary account data in a commit or issue. Previously posted GitHub tokens were exposed in chat and should be revoked. To authorize GitHub changes, use GitHub's device flow or your own machine's credential manager; don't paste tokens into chats or remote URLs.
