@@ -107,6 +107,11 @@ def test_config_export_import_and_copy(backend):
         backend.action('settings', {'key': 'startup', 'value': 'yes'})
 
 
+def test_package_self_test_loads_ui_and_loopback_api():
+    from main import run_self_test
+    assert run_self_test() == 0
+
+
 def test_server_security_and_static(backend):
     server = make_server(backend)
     worker = threading.Thread(target=server.serve_forever, daemon=True)

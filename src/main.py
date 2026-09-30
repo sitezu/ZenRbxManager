@@ -88,6 +88,50 @@ def make_server(backend, port=0):
     return ThreadingHTTPServer(('127.0.0.1', port), Handler)
 
 
+def run_self_test():
+    """Exercise bundled UI + local API without Roblox, browser or saved accounts.
+
+    Used by Windows CI after installing the setup package. This is not an
+    end-to-end Roblox authentication or launch test.
+    """
+    import re
+    import urllib.request
+
+    class EmptyManager:
+        accounts = {}
+
+    with tempfile.TemporaryDirectory(prefix='zenrbx_test_') as data_dir:
+        backend = ZenBackend(manager=EmptyManager(), data_dir=data_dir)
+        backend.presence_updated = float('inf')  # never contact Roblox
+        server = make_server(backend)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        base = f'http://127.0.0.1:{server.server_port}'
+        try:
+            with urllib.request.urlopen(base + '/', timeout=8) as response:
+                html = response.read().decode('utf-8')
+            match = re.search(r'const ZEN_TOKEN = ("[^"]+");', html)
+            if not match or 'ZenRbxManager' not in html:
+                raise RuntimeError('Bundled desktop HTML did not load.')
+            session_token = json.loads(match.group(1))
+            with urllib.request.urlopen(base + '/assets/app.js', timeout=8) as response:
+                if b'updateState' not in response.read():
+                    raise RuntimeError('Bundled UI JavaScript did not load.')
+            request = urllib.request.Request(base + '/api/state', data=b'{}', method='POST', headers={
+                'Content-Type': 'application/json', 'Origin': base, 'X-Zen-Token': session_token,
+            })
+            with urllib.request.urlopen(request, timeout=8) as response:
+                data = json.load(response)
+            if data.get('accounts') != [] or data.get('settings', {}).get('theme') != 'indigo':
+                raise RuntimeError('Local account API returned unexpected data.')
+        finally:
+            server.shutdown()
+            server.server_close()
+            worker.join(timeout=3)
+    print('ZenRbxManager package self-test passed (UI and local API; no Roblox account used).')
+    return 0
+
+
 def installed_browser():
     local = os.environ.get('LOCALAPPDATA', '')
     pf86 = os.environ.get('ProgramFiles(x86)', '')
@@ -102,6 +146,12 @@ def installed_browser():
 
 
 def main():
+    if '--self-test' in sys.argv:
+        try:
+            return run_self_test()
+        except Exception as exc:
+            print(f'Package self-test failed: {exc}', file=sys.stderr)
+            return 1
     if sys.platform != 'win32':
         print('ZenRbxManager requires Windows 10/11 to launch Roblox. Tests can run on other systems.')
         return 1

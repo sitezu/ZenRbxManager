@@ -48,12 +48,46 @@ jobs:
           if ($file.Length -ge 100000000) { throw "Release executable exceeds 100 MB" }
           $hash = (Get-FileHash "dist/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $name" | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $compiler)) { choco install innosetup -y --no-progress }
+          if (-not (Test-Path $compiler)) { throw 'Inno Setup compiler was not found' }
+          "ISCC_PATH=$compiler" >> $env:GITHUB_ENV
+      - name: Build and size-check per-user setup
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          & "$env:ISCC_PATH" "/DMyAppVersion=$tag" 'packaging\ZenRbxManager.iss'
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
+          $setup = Get-Item "dist/ZenRbxManager-Setup-$tag.exe"
+          if ($setup.Length -ge 100000000) { throw 'Setup exceeds 100 MB' }
+          $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($setup.Name)" | Out-File dist/SETUP-SHA256SUMS.txt -Encoding ascii
+      - name: Smoke-test setup install and uninstall
+        shell: pwsh
+        run: |
+          $folder = Join-Path $env:RUNNER_TEMP 'ZenRbxManager-Release-Smoke'
+          $setup = (Resolve-Path "dist/ZenRbxManager-Setup-${{ github.ref_name }}.exe").Path
+          $install = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=$folder" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Install failed ($($install.ExitCode))" }
+          $app = Join-Path $folder 'ZenRbxManager.exe'
+          if (-not (Test-Path $app)) { throw 'Installed EXE missing' }
+          $smoke = Start-Process -FilePath $app -ArgumentList '--self-test' -Wait -PassThru
+          if ($smoke.ExitCode -ne 0) { throw "Installed app self-test failed ($($smoke.ExitCode))" }
+          $uninstall = Join-Path $folder 'unins000.exe'
+          if (-not (Test-Path $uninstall)) { throw 'Uninstaller missing' }
+          $remove = Start-Process -FilePath $uninstall -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($remove.ExitCode -ne 0 -or (Test-Path $app)) { throw 'Setup uninstall smoke test failed' }
       - uses: actions/upload-artifact@v4
         with:
           name: ZenRbxManager-${{ github.ref_name }}
           path: |
             dist/ZenRbxManager-${{ github.ref_name }}.exe
             dist/SHA256SUMS.txt
+            dist/ZenRbxManager-Setup-${{ github.ref_name }}.exe
+            dist/SETUP-SHA256SUMS.txt
       - name: Publish preview release
         uses: softprops/action-gh-release@v2
         with:
@@ -65,4 +99,6 @@ jobs:
           files: |
             dist/ZenRbxManager-${{ github.ref_name }}.exe
             dist/SHA256SUMS.txt
+            dist/ZenRbxManager-Setup-${{ github.ref_name }}.exe
+            dist/SETUP-SHA256SUMS.txt
             LICENSE

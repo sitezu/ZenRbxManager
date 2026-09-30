@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="site/og.png" alt="ZenRbxManager — your Roblox accounts, in one place" width="100%">
+  <img src="site/og.png" alt="ZenRbxManager — Your accounts. One place. A preview of the desktop app" width="100%">
 </p>
 
 <div align="center">
@@ -46,6 +46,8 @@ These are captures of the interface with an **empty account list**—no real acc
 3. Choose **Add New Account**. Use the browser sign-in flow, or import a `.ROBLOSECURITY` cookie that belongs to you. Browser sign-in may need to download a matching WebDriver on first use.
 4. Select an account, then launch Roblox Home or enter a Place ID. That’s it.
 
+**Want a setup wizard instead of a portable EXE?** A per-user Windows installer is being built as a CI artifact. It installs a Start Menu shortcut, offers an optional desktop shortcut, and includes an uninstaller. It will **not** be published as a release until its live Roblox login and launch flows have been tested by the owner on Windows. See the newest [Windows build run](https://github.com/sitezu/ZenRbxManager/actions/workflows/windows-build.yml) for the `ZenRbxManager-Setup-Candidate` artifact after its install/uninstall smoke test passes. Before requesting a setup release, follow the [real-Windows test checklist](TEST_ON_WINDOWS.md) with an account you own.
+
 The EXE is **unsigned**, so Windows SmartScreen may warn you. You should inspect the source before trusting any account tool. If you are upgrading from another account manager, **back up `AccountManagerData` first**. Hardware-encrypted vaults may be tied to the original computer; password-encrypted upstream vaults need migration in the original app before opening them here.
 
 ### Run from source
@@ -81,11 +83,12 @@ The app uses an installed browser as its desktop window; **it does not bundle Ch
 - `src/` — local API, account storage, Roblox integration, Windows entry point.
 - `web/` — the desktop interface. `tests/web.test.mjs` checks real account rendering, preferences, notes and HTML escaping.
 - `site/` — the [GitHub Pages website](https://sitezu.github.io/ZenRbxManager/), inspired by sitezu’s [ZenTask site](https://github.com/sitezu/Zentask).
-- `.github/workflows/windows-build.yml` — tests and builds a Windows artifact, failing at **100,000,000 bytes** or more.
-- `.github/workflows/release.yml` — on a `v*` tag, repeats the tests and size check, publishes the EXE, SHA-256 checksum, and GPL license as a **preview release**.
+- `.github/workflows/windows-build.yml` — tests and builds the portable EXE and per-user setup candidate, self-tests the packaged app and silent install/uninstall, and fails if either file reaches **100,000,000 bytes**.
+- `packaging/ZenRbxManager.iss` — per-user Inno Setup installer; uninstall preserves saved accounts.
+- `.github/workflows/release.yml` — on a future `v*` tag, repeats tests and size checks and can publish both the portable EXE and setup installer with SHA-256 checksums. **The current v0.1.0-preview release contains only the portable EXE.**
 - `.github/workflows/pages.yml` — publishes `site/` to GitHub Pages.
 
-For a future version, update the download links in `README.md` and `site/index.html`, update the release notes, then tag the tested commit. Don’t call a build stable until it has been exercised with a real Roblox account on Windows. The website itself is static; it **never** asks for account credentials.
+For a future version, update the download links in `README.md` and `site/index.html`, update the release notes, then tag the tested commit. Do not tag a setup release until its real Roblox sign-in and game launch have been exercised with an account the tester owns on Windows. Automated install/uninstall and loopback self-tests do **not** prove those live flows work. The website itself is static; it **never** asks for account credentials.
 
 This project adapts account logic from [evanovar/RobloxAccountManager](https://github.com/evanovar/RobloxAccountManager), licensed GPL-3.0. The website styling adapts [sitezu/Zentask](https://github.com/sitezu/Zentask), licensed MIT. See [ATTRIBUTION.md](ATTRIBUTION.md) and the included licenses. ZenRbxManager is not made or endorsed by Roblox.
 

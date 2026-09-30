@@ -1,6 +1,6 @@
 # Website and preview releases
 
-The site is published at **https://sitezu.github.io/ZenRbxManager/** from the `site/` directory by [the Pages workflow](.github/workflows/pages.yml). Changes to `site/` on `main` deploy automatically. The downloadable app is a **Windows preview** until a real Roblox login and launch have been verified on Windows.
+The site is published at **https://sitezu.github.io/ZenRbxManager/** from the `site/` directory by [the Pages workflow](.github/workflows/pages.yml). Changes to `site/` on `main` deploy automatically. The current downloadable app is a **portable Windows preview**. A setup installer candidate is built in CI, but must not be tagged for release until someone tests real Roblox login and launch on Windows.
 
 ## How to publish another preview
 

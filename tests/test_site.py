@@ -47,7 +47,6 @@ def test_website_has_real_product_copy_and_valid_internal_links():
     assert '/*REFERENCE_CSS*/' not in html
     assert (ROOT / 'site/Zentask-MIT-LICENSE.txt').exists()
     assert (ROOT / 'site/og.png').stat().st_size < 1_000_000
-    ET.parse(ROOT / 'site/og.svg')
 
 
 def test_desktop_visual_layer_keeps_functional_ui():

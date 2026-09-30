@@ -39,7 +39,51 @@ jobs:
           size = exe.stat().st_size
           print(f'EXE size: {size:,} bytes ({size / 1024**2:.1f} MiB)')
           assert size < 100_000_000, 'EXE exceeds 100 MB limit'
+      - name: Verify packaged app without an account
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath (Resolve-Path 'dist/ZenRbxManager.exe') -ArgumentList '--self-test' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Packaged app self-test failed ($($process.ExitCode))" }
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $compiler)) { choco install innosetup -y --no-progress }
+          if (-not (Test-Path $compiler)) { throw 'Inno Setup compiler was not found' }
+          "ISCC_PATH=$compiler" >> $env:GITHUB_ENV
+      - name: Build per-user setup package
+        shell: pwsh
+        run: |
+          & "$env:ISCC_PATH" '/DMyAppVersion=candidate' 'packaging\ZenRbxManager.iss'
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
+          $setup = Get-Item 'dist/ZenRbxManager-Setup-candidate.exe'
+          Write-Host "Setup size: $($setup.Length) bytes"
+          if ($setup.Length -ge 100000000) { throw 'Setup exceeds 100 MB' }
+          $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($setup.Name)" | Out-File dist/SETUP-SHA256SUMS.txt -Encoding ascii
+      - name: Smoke-test silent install, installed app, and uninstall
+        shell: pwsh
+        run: |
+          $folder = Join-Path $env:RUNNER_TEMP 'ZenRbxManager-Installer-Smoke'
+          $setup = (Resolve-Path 'dist/ZenRbxManager-Setup-candidate.exe').Path
+          $install = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=$folder" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Install failed ($($install.ExitCode))" }
+          $app = Join-Path $folder 'ZenRbxManager.exe'
+          if (-not (Test-Path $app)) { throw 'Installed EXE missing' }
+          $smoke = Start-Process -FilePath $app -ArgumentList '--self-test' -Wait -PassThru
+          if ($smoke.ExitCode -ne 0) { throw "Installed app self-test failed ($($smoke.ExitCode))" }
+          $uninstall = Join-Path $folder 'unins000.exe'
+          if (-not (Test-Path $uninstall)) { throw 'Uninstaller missing' }
+          $remove = Start-Process -FilePath $uninstall -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($remove.ExitCode -ne 0) { throw "Uninstall failed ($($remove.ExitCode))" }
+          if (Test-Path $app) { throw 'Uninstall left the application EXE behind' }
       - uses: actions/upload-artifact@v4
         with:
           name: ZenRbxManager-Windows
           path: dist/ZenRbxManager.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZenRbxManager-Setup-Candidate
+          path: |
+            dist/ZenRbxManager-Setup-candidate.exe
+            dist/SETUP-SHA256SUMS.txt

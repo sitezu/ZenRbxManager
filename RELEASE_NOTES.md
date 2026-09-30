@@ -12,6 +12,7 @@ A small first release for people who switch between Roblox accounts and want one
 ### Files
 
 - `ZenRbxManager-<version>.exe` — portable Windows build (put it in a folder where it can save data).
+- `ZenRbxManager-Setup-<version>.exe` — per-user setup wizard with shortcuts and uninstall, **only when that version includes a tested setup release**.
 - `SHA256SUMS.txt` — checksum for verifying the download.
 - `LICENSE` — GPL-3.0 terms inherited from the upstream backend.
 
