@@ -6,12 +6,35 @@ use the existing ZenBackend directly; only Roblox's sign-in flow may open a brow
 from __future__ import annotations
 
 import json
+import os
+import sys
 import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 
 from zen_backend import THEMES
+
+
+def configure_tcl_paths():
+    """Avoid a broken TCL_LIBRARY inherited on hosted Windows Python runners.
+
+    PyInstaller's Tk runtime hook manages _tcl_data/_tk_data in frozen builds;
+    leave its paths untouched. A normal Python installation keeps Tcl beside
+    python.exe in tcl/tcl8.6 and tcl/tk8.6.
+    """
+    if sys.platform != 'win32' or getattr(sys, 'frozen', False):
+        return
+    library = Path(sys.base_prefix) / 'tcl'
+    tcl = library / 'tcl8.6'
+    tk = library / 'tk8.6'
+    if (tcl / 'init.tcl').is_file() and (tcl / 'auto.tcl').is_file():
+        os.environ['TCL_LIBRARY'] = str(tcl)
+        if (tk / 'tk.tcl').is_file():
+            os.environ['TK_LIBRARY'] = str(tk)
+
+
+configure_tcl_paths()
 
 BG = '#090a0f'
 PANEL = '#141522'

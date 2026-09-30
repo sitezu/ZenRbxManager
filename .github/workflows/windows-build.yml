@@ -21,6 +21,17 @@ jobs:
           cache: npm
       - name: Test original HTML design reference
         run: npm ci --ignore-scripts && npm test
+      - name: Diagnose native Tcl/Tk installation
+        shell: python
+        run: |
+          import os, sys
+          from pathlib import Path
+          base = Path(sys.base_prefix) / 'tcl'
+          print('Python base:', sys.base_prefix)
+          for folder, files in [('tcl8.6', ['init.tcl', 'auto.tcl']), ('tk8.6', ['tk.tcl'])]:
+              print(folder, {name: (base / folder / name).is_file() for name in files})
+          print('TCL_LIBRARY inherited:', os.getenv('TCL_LIBRARY'))
+          print('TK_LIBRARY inherited:', os.getenv('TK_LIBRARY'))
       - name: Test native desktop UI and Python backend
         run: python -m pytest -q
       - name: Build portable exe
