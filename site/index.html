@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#030108">
+<meta name="description" content="ZenRbxManager is an open-source Windows desktop app for organizing Roblox accounts and launching selected accounts into places and servers.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZenRbxManager">
+<meta property="og:title" content="ZenRbxManager — your accounts, in one place">
+<meta property="og:description" content="Organize accounts, keep local notes, and launch Roblox sessions from one focused Windows workspace.">
+<meta property="og:url" content="https://sitezu.github.io/ZenRbxManager/">
+<meta property="og:image" content="https://raw.githubusercontent.com/sitezu/ZenRbxManager/main/site/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>ZenRbxManager — Your Roblox accounts, in one place</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%236366f1"/><stop offset="1" stop-color="%23a855f7"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(%23g)"/><text x="32" y="45" font-family="Arial" font-size="36" font-weight="900" fill="white" text-anchor="middle">Z</text></svg>'>
+<style>
+/* Visual foundation adapted from sitezu/Zentask (MIT). See ATTRIBUTION.md. */
+
+  :root {
+    --bg-base: #030108;
+    --grid-color: rgba(255, 255, 255, 0.03);
+    --surface: rgba(255, 255, 255, 0.02);
+    --surface-border: rgba(255, 255, 255, 0.06);
+    --surface-hover-border: rgba(139, 137, 255, 0.3);
+    
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --secondary: #a855f7;
+    --glow-primary: rgba(99, 102, 241, 0.3);
+    --glow-secondary: rgba(168, 85, 247, 0.3);
+    
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+    line-height: 1.6;
+    /* Animated tech grid background */
+    background-image: 
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center top;
+  }
+
+  /* Breathing ambient glows */
+  .ambient-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    opacity: 0.5;
+    animation: breathe 8s ease-in-out infinite alternate;
+  }
+  .glow-1 {
+    top: -100px; left: 10%;
+    background: radial-gradient(circle, var(--glow-primary) 0%, transparent 70%);
+  }
+  .glow-2 {
+    top: 20%; right: 10%;
+    background: radial-gradient(circle, var(--glow-secondary) 0%, transparent 70%);
+    animation-delay: -4s;
+  }
+
+  .container {
+    max-width: 1000px;
+    width: 100%;
+    padding: 100px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 1;
+  }
+
+  /* Hero Section */
+  .logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    font-weight: 900;
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset, 
+                0 20px 40px var(--glow-primary);
+    margin-bottom: 32px;
+    position: relative;
+  }
+  
+  /* Rotating border effect on logo */
+  .logo::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 26px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    z-index: -1;
+    animation: spin 3s linear infinite;
+  }
+
+  h1 {
+    font-size: clamp(48px, 8vw, 72px);
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  h1 span {
+    background: linear-gradient(to right, #fff 20%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: pulse-text 4s ease-in-out infinite alternate;
+  }
+
+  .tagline {
+    color: var(--text-muted);
+    font-size: clamp(16px, 4vw, 20px);
+    max-width: 650px;
+    margin-bottom: 48px;
+    font-weight: 400;
+  }
+
+  /* Shimmering CTA Button */
+  .btn-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--primary));
+    background-size: 200% auto;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 18px 48px;
+    border-radius: 99px;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: gradient-shift 4s linear infinite;
+    box-shadow: 0 12px 32px var(--glow-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 48px var(--glow-secondary);
+  }
+
+  .btn:active {
+    transform: translateY(2px) scale(0.98);
+  }
+
+  .meta {
+    color: #64748b;
+    font-size: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 80px;
+    font-weight: 500;
+  }
+
+  .meta span::before {
+    content: '•';
+    color: #334155;
+    margin-right: 16px;
+  }
+
+  /* Bento-style Features Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    width: 100%;
+    perspective: 1000px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 32px;
+    text-align: left;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Card shine effect */
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+    transform: skewX(-20deg);
+    transition: 0.7s;
+  }
+
+  .card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--surface-hover-border);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 
+                0 0 0 1px var(--surface-hover-border) inset;
+  }
+
+  .card:hover::after {
+    left: 200%;
+  }
+
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card:hover .card-icon {
+    background: var(--primary);
+    border-color: var(--primary-hover);
+    color: #fff;
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 24px var(--glow-primary);
+  }
+
+  .card b {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+
+  .card p {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* Demo */
+  .demo { margin: 0 0 80px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 24px; padding: 20px; max-width: 480px; }
+  .demo img, .demo video { border-radius: 14px; display: block; width: 100%; }
+  .demo figcaption { color: var(--text-muted); font-size: 13px; margin-top: 12px; }
+
+  /* Screenshots */
+  .shots { width: 100%; margin-top: 96px; }
+  .shots h2 { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin-bottom: 28px; }
+  .shots h2 span { background: linear-gradient(to right, #fff 20%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .shots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .shot { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 24px; padding: 16px; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .shot:hover { transform: translateY(-8px); border-color: var(--surface-hover-border); box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4); }
+  .shot img { width: 100%; border-radius: 14px; display: block; }
+  .shot figcaption { color: var(--text-muted); font-size: 14px; padding: 14px 6px 4px; }
+
+  /* Footer */
+  footer {
+    width: 100%;
+    padding: 40px 24px;
+    border-top: 1px solid var(--surface-border);
+    background: rgba(3, 1, 8, 0.8);
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: #64748b;
+    font-size: 14px;
+    margin-top: auto;
+  }
+
+  footer a {
+    color: #a855f7;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  footer a:hover { color: #d8b4fe; }
+
+  .security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(34, 197, 94, 0.05);
+    color: #4ade80;
+    padding: 8px 16px;
+    border-radius: 99px;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .security-badge:hover {
+    background: rgba(34, 197, 94, 0.1);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* --- Complex Animations --- */
+  
+  /* Initial Reveal Blur & Slide */
+  .reveal {
+    opacity: 0;
+    filter: blur(16px);
+    transform: translateY(40px) scale(0.95);
+    animation: superReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+
+  @keyframes superReveal {
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes breathe {
+    0% { transform: scale(1) translate(0, 0); opacity: 0.4; }
+    100% { transform: scale(1.2) translate(20px, 20px); opacity: 0.7; }
+  }
+
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  @keyframes pulse-text {
+    0% { filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); }
+    100% { filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.4)); }
+  }
+
+/* ZenRbxManager additions to the Zentask-inspired visual system */
+html { scroll-behavior: smooth; overflow-x: clip; }
+body { isolation:isolate; }
+.ambient-glow { pointer-events:none; max-width:90vw; max-height:90vw; }
+a:focus-visible, summary:focus-visible { outline:2px solid #c4b5fd; outline-offset:5px; }
+.site-nav { width:min(1120px, 100%); margin:auto; padding:24px 28px; display:flex; justify-content:space-between; align-items:center; gap:20px; position:relative; z-index:2; }
+.nav-brand { display:flex; align-items:center; gap:11px; color:#fff; text-decoration:none; font-weight:800; font-size:15px; letter-spacing:-.025em; }
+.nav-brand .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; font-size:20px; font-weight:900; background:linear-gradient(135deg,#6366f1,#a855f7); box-shadow:0 7px 24px rgba(99,102,241,.3); }
+.nav-links { display:flex; gap:25px; align-items:center; }
+.nav-links a { color:#a8b0c4; text-decoration:none; font-size:13px; font-weight:600; }
+.nav-links a:hover { color:white; }
+.nav-links .nav-repo { color:white; border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:9px 15px; background:rgba(255,255,255,.04); }
+.container { max-width:1120px; padding-top:72px; }
+.eyebrow { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.2em; border:1px solid rgba(139,137,255,.28); border-radius:99px; color:#b6b9ff; background:rgba(99,102,241,.08); padding:8px 14px; margin-bottom:30px; }
+.logo { width:72px; height:72px; font-size:38px; border-radius:21px; margin-bottom:25px; }
+.logo::before { border-radius:23px; }
+h1 { font-size:clamp(47px,8vw,76px); margin-bottom:18px; letter-spacing:-.065em; }
+.tagline { max-width:680px; margin-bottom:30px; font-size:clamp(16px,3vw,19px); }
+.hero-actions { display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+.btn { padding:14px 27px; font-size:15px; }
+.btn-outline { display:inline-flex; align-items:center; justify-content:center; color:#dce0ef; text-decoration:none; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.035); border-radius:99px; padding:14px 23px; font-size:15px; font-weight:600; transition:.25s; }
+.btn-outline:hover { border-color:rgba(139,137,255,.65); background:rgba(99,102,241,.1); transform:translateY(-2px); }
+.meta { margin-bottom:57px; gap:12px; }
+.meta span::before { margin-right:12px; }
+.preview-wrap { width:100%; padding:1px; border-radius:24px; background:linear-gradient(125deg,rgba(132,132,255,.65),rgba(168,85,247,.12) 45%,rgba(255,255,255,.08)); box-shadow:0 36px 110px rgba(11,9,49,.58),0 0 65px rgba(99,102,241,.13); text-align:left; }
+.preview { border-radius:23px; background:linear-gradient(160deg,#13111f,#0a0a13 75%); overflow:hidden; border:1px solid rgba(255,255,255,.045); }
+.preview-titlebar { display:flex; gap:10px; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid rgba(255,255,255,.075); color:#aeb6cc; font-size:12px; }
+.preview-titlebar strong { color:#fff; font-size:12px; letter-spacing:.06em; }
+.preview-dots { display:flex; gap:6px; }
+.preview-dots i { width:7px; height:7px; background:#51516d; border-radius:50%; display:block; }
+.preview-body { display:grid; grid-template-columns:minmax(0,1fr) 285px; gap:15px; padding:19px; }
+.preview-panel { border-radius:14px; padding:17px; background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.075); }
+.preview-search { border:1px solid rgba(255,255,255,.075); background:#0b0b14; color:#77829c; padding:11px 13px; border-radius:10px; font-size:12px; }
+.preview-chips { display:flex; gap:6px; margin:13px 0; flex-wrap:wrap; }
+.preview-chips span { color:#9ea8bc; border:1px solid rgba(255,255,255,.08); border-radius:7px; padding:5px 9px; font-size:10px; }
+.preview-chips span:first-child { color:white; background:#5955db; border-color:#7974ff; }
+.preview-table { display:grid; grid-template-columns:1.5fr .8fr .7fr 2fr; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:#8690a8; border-bottom:1px solid rgba(255,255,255,.08); padding:9px; }
+.preview-empty { min-height:170px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; color:#a8adc1; text-align:center; }
+.preview-empty .empty-icon { font-size:30px; line-height:1; color:#8e83ff; }
+.preview-empty strong { color:#e5e7ef; font-size:13px; }
+.preview-empty small { font-size:11px; color:#717a91; }
+.preview-add { background:#20203a; border:1px solid rgba(120,118,240,.25); color:#e5e2ff; border-radius:9px; padding:10px; font-size:11px; font-weight:700; text-align:center; }
+.preview-panel h3 { color:#e9ebf6; text-transform:uppercase; letter-spacing:.09em; font-size:11px; margin-bottom:17px; }
+.preview-panel h3 .spark { color:#a385ff; }
+.preview-action { display:block; width:100%; text-align:center; border-radius:9px; background:linear-gradient(90deg,#6366f1,#a855f7); padding:12px 8px; font-size:11px; font-weight:800; color:white; margin-bottom:9px; }
+.preview-action.alt { background:#161628; border:1px solid rgba(255,255,255,.08); font-weight:600; color:#d1d5e6; }
+.preview-note { font-size:10px; color:#8690a8; margin-top:20px; }
+.preview-textarea { margin-top:8px; border:1px solid rgba(255,255,255,.075); background:#0b0b14; padding:13px; border-radius:9px; height:78px; color:#586379; font-size:11px; }
+.preview-caption { margin-top:14px; color:#7c829d; font-size:12px; }
+.section-heading { margin-top:106px; max-width:660px; }
+.section-kicker { color:#ad9bff; text-transform:uppercase; font-size:11px; font-weight:800; letter-spacing:.2em; margin-bottom:12px; }
+.section-heading h2 { font-size:clamp(32px,5vw,46px); line-height:1.14; letter-spacing:-.05em; margin-bottom:15px; }
+.section-heading h2 span { background:linear-gradient(90deg,#fff,#b985f7); background-clip:text; -webkit-background-clip:text; color:transparent; }
+.section-heading p { color:#94a3b8; font-size:15px; }
+.grid { margin-top:37px; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.card { padding:26px; border-radius:19px; min-height:214px; }
+.card-icon { margin-bottom:20px; height:46px; width:46px; border-radius:13px; font-size:23px; }
+.card b { font-size:16px; margin-bottom:7px; }
+.card p { font-size:13px; line-height:1.65; }
+.card:hover { transform:translateY(-4px); }
+.how { display:grid; grid-template-columns:1fr 1fr; gap:35px; align-items:center; width:100%; margin-top:115px; text-align:left; }
+.how h2 { font-size:clamp(30px,5vw,44px); line-height:1.12; letter-spacing:-.045em; margin:12px 0 14px; }
+.how p { color:#94a3b8; font-size:15px; }
+.steps { list-style:none; display:grid; gap:11px; }
+.steps li { display:flex; align-items:start; gap:14px; padding:15px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.026); border-radius:13px; }
+.step-num { flex:none; display:grid; place-items:center; background:rgba(99,102,241,.15); color:#b5aaff; border:1px solid rgba(99,102,241,.25); border-radius:10px; width:31px; height:31px; font-size:12px; font-weight:800; }
+.steps strong { display:block; font-size:13px; margin-bottom:3px; }
+.steps p { font-size:12px; line-height:1.5; }
+.note-box { text-align:left; border:1px solid rgba(129,122,255,.27); background:linear-gradient(110deg,rgba(99,102,241,.12),rgba(168,85,247,.06)); padding:26px 30px; border-radius:20px; width:100%; margin-top:99px; display:flex; justify-content:space-between; align-items:center; gap:22px; }
+.note-box strong { font-size:18px; }
+.note-box p { color:#a8adc6; font-size:13px; max-width:650px; margin-top:5px; }
+.note-box a { flex:none; }
+.faq { width:100%; max-width:780px; margin-top:108px; text-align:left; }
+.faq h2 { font-size:32px; letter-spacing:-.04em; margin-bottom:20px; text-align:center; }
+.faq details { border-bottom:1px solid rgba(255,255,255,.1); padding:16px 4px; }
+.faq summary { cursor:pointer; font-size:14px; font-weight:700; list-style:none; display:flex; justify-content:space-between; }
+.faq summary::after { content:'+'; color:#a08ff3; font-size:19px; line-height:1; }
+.faq details[open] summary::after { content:'−'; }
+.faq details p { color:#a5afc5; margin-top:12px; font-size:13px; line-height:1.7; }
+.faq a { color:#c5b4ff; }
+footer { text-align:center; margin-top:80px; gap:8px; font-size:12px; }
+footer a { color:#c4a3ff; }
+footer .foot-links { display:flex; flex-wrap:wrap; justify-content:center; gap:22px; }
+@media(max-width:750px){.site-nav{padding:19px 18px}.nav-links a:first-child{display:none}.container{padding:42px 18px 45px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-body{grid-template-columns:1fr}.preview-body>.preview-panel:last-child{display:none}.how{grid-template-columns:1fr;gap:24px}.note-box{flex-direction:column;align-items:start}}
+@media(max-width:520px){h1{font-size:clamp(35px,9vw,45px)}.grid{grid-template-columns:1fr}.preview-table{grid-template-columns:1.2fr .8fr .6fr}.preview-table span:last-child{display:none}.preview-empty{min-height:130px}.nav-brand{font-size:13px}.nav-links a:not(.nav-repo){display:none}.note-box{padding:20px}.container{padding-top:36px}.section-heading{margin-top:79px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.reveal{opacity:1;filter:none;transform:none}}
+</style>
+</head>
+<body>
+<div class="ambient-glow glow-1" aria-hidden="true"></div>
+<div class="ambient-glow glow-2" aria-hidden="true"></div>
+<nav class="site-nav" aria-label="Main navigation">
+  <a class="nav-brand" href="#top"><span class="brand-mark">Z</span> ZenRbxManager</a>
+  <div class="nav-links"><a href="#features">Features</a><a href="#how">Get started</a><a class="nav-repo" href="https://github.com/sitezu/ZenRbxManager">GitHub ↗</a></div>
+</nav>
+<main id="top" class="container">
+  <div class="eyebrow reveal">A calmer way to manage Roblox accounts</div>
+  <div class="logo reveal delay-1" aria-hidden="true">Z</div>
+  <h1 class="reveal delay-1">Zen<span>RbxManager</span></h1>
+  <p class="tagline reveal delay-2">Your accounts, organized. Your next session, one click away. A focused Windows workspace for managing Roblox accounts without the clutter.</p>
+  <div class="hero-actions reveal delay-3">
+    <a class="btn" href="https://github.com/sitezu/ZenRbxManager#run-from-source" aria-label="View setup guide on GitHub">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 17l-5-5 5-5M16 7l5 5-5 5M14 4l-4 16"/></svg>
+      Get the source
+    </a>
+    <a class="btn-outline" href="#features">Explore features <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="meta reveal delay-4">Windows 10 / 11 <span>Open source · GPL-3.0</span> <span>Local account storage</span></div>
+
+  <div class="preview-wrap reveal delay-5" aria-label="Illustration of the ZenRbxManager desktop interface">
+    <div class="preview">
+      <div class="preview-titlebar"><strong><span style="color:#a594ff">◆</span> &nbsp;ZENRBXMANAGER</strong><span>ACCOUNT WORKSPACE</span><span class="preview-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+      <div class="preview-body">
+        <div class="preview-panel"><div class="preview-search">⌕ &nbsp; Search accounts by name or alias...</div><div class="preview-chips"><span>All Accs</span><span>Online</span><span>In-Game</span><span>Away</span><span>Offline</span></div><div class="preview-table"><span>Username</span><span>Status</span><span>Tag</span><span>Notes</span></div><div class="preview-empty"><span class="empty-icon" aria-hidden="true">◇</span><strong>A fresh start for your accounts</strong><small>Add an account to build your workspace.</small></div><div class="preview-add">＋ &nbsp; Add New Account</div></div>
+        <div class="preview-panel"><h3><span class="spark">⌘</span> &nbsp; Execution center</h3><span class="preview-action">▶ &nbsp; Join Specific Place</span><span class="preview-action alt">↗ &nbsp; Launch Main Client</span><div class="preview-note">NOTES &amp; CONFIG &nbsp; · &nbsp; 0 / 250</div><div class="preview-textarea">Account operational notes...</div></div>
+      </div>
+    </div>
+  </div>
+  <p class="preview-caption reveal delay-6">Interface illustration · no accounts or sessions are shown</p>
+
+  <div id="features" class="section-heading reveal delay-1"><div class="section-kicker">Made to stay focused</div><h2>Everything in its <span>place.</span></h2><p>The tools you need to organize accounts and start a Roblox session, with an interface that stays out of your way.</p></div>
+  <div class="grid">
+    <article class="card reveal delay-2"><div class="card-icon" aria-hidden="true">▦</div><b>One account workspace</b><p>Search, filter, select, reorder and label your accounts. Keep a short note with each one.</p></article>
+    <article class="card reveal delay-3"><div class="card-icon" aria-hidden="true">⊕</div><b>Two ways to add</b><p>Sign in through a supported browser or import your own Roblox security cookie. Roblox verifies the account identity.</p></article>
+    <article class="card reveal delay-4"><div class="card-icon" aria-hidden="true">↗</div><b>Launch where you want</b><p>Open Roblox Home or enter a Place ID and optional server Job ID. Launch one selected account or several.</p></article>
+    <article class="card reveal delay-3"><div class="card-icon" aria-hidden="true">◈</div><b>Local encrypted storage</b><p>On first setup, saved accounts are encrypted on your machine. Exported settings exclude login cookies.</p></article>
+    <article class="card reveal delay-4"><div class="card-icon" aria-hidden="true">◉</div><b>Presence at a glance</b><p>Online and in-game status appears when Roblox returns it. Unknown stays unknown; Away can be marked manually.</p></article>
+    <article class="card reveal delay-5"><div class="card-icon" aria-hidden="true">✦</div><b>Make it yours</b><p>Switch accents, choose a login browser, set launch delays and configure Windows Startup.</p></article>
+  </div>
+
+  <section id="how" class="how reveal delay-2" aria-labelledby="how-title"><div><div class="section-kicker">A simple flow</div><h2 id="how-title">Set up once.<br>Stay in control.</h2><p>ZenRbxManager runs on Windows using an installed browser for its interface, so it doesn't bundle a heavyweight browser engine. Your account list stays on your computer.</p></div><ol class="steps"><li><span class="step-num">01</span><div><strong>Get the Windows app or run from source</strong><p>Follow the repository guide. Edge or Chrome is needed for the app window.</p></div></li><li><span class="step-num">02</span><div><strong>Add an account you own</strong><p>Use the browser login flow or import a Roblox security cookie you control.</p></div></li><li><span class="step-num">03</span><div><strong>Choose an account and launch</strong><p>Open Roblox Home or enter a Place ID. Roblox and internet access are required.</p></div></li></ol></section>
+
+  <section class="note-box reveal delay-2" aria-label="Open source"><div><strong>Built in the open, for your desktop.</strong><p>Adapted from Evanovar RAM's account backend. Inspect the code before trusting any software with your Roblox login session. Windows builds are checked against a 100 MB executable limit in CI; no unverified download is advertised here.</p></div><a class="btn-outline" href="https://github.com/sitezu/ZenRbxManager">View the code ↗</a></section>
+
+  <section class="faq reveal delay-2" aria-labelledby="faq-title"><h2 id="faq-title">Good to know</h2><details><summary>Is ZenRbxManager an official Roblox app?</summary><p>No. This is an independent open-source community project, not affiliated with or endorsed by Roblox.</p></details><details><summary>Do I need to install a browser?</summary><p>Yes. The desktop interface opens using an installed Edge or Chrome browser. Website login may require a matching WebDriver. The app does not bundle a browser.</p></details><details><summary>Where are my accounts stored?</summary><p>Locally in the app's <code>AccountManagerData</code> folder. A new setup enables hardware-based encryption. Back up your data before moving computers; a vault from another machine may need its original environment.</p></details><details><summary>Can I download a ready-made Windows executable?</summary><p>Not until a Windows build is published and tested. For now, see the <a href="https://github.com/sitezu/ZenRbxManager#run-from-source">run-from-source instructions</a>. The repository workflow enforces a 100 MB limit for the executable.</p></details></section>
+</main>
+<footer><div class="foot-links"><a href="https://github.com/sitezu/ZenRbxManager">Source</a><a href="https://github.com/sitezu/ZenRbxManager/issues">Issues</a><a href="https://github.com/sitezu/Zentask">ZenTask</a></div><div>Made by <a href="https://github.com/sitezu">sitezu</a> · ZenRbxManager is not affiliated with Roblox.</div><div>Visual foundation adapted from ZenTask (MIT). Account backend derived from Evanovar RAM (GPL-3.0).</div></footer>
+</body>
+</html>

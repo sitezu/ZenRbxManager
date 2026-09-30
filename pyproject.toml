@@ -1,0 +1,14 @@
+[project]
+name = "zenrbxmanager"
+version = "0.1.0"
+description = "Lightweight Windows Roblox account manager UI built on Evanovar RAM core"
+requires-python = ">=3.11,<3.15"
+dependencies = ["requests>=2.28,<3", "pycryptodome>=3.15,<4", "selenium>=4.6,<5"]
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6,<7"]
+test = ["pytest>=8,<10"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

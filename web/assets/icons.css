@@ -1,0 +1,27 @@
+@font-face{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;font-display:block;src:url(./fa-solid-900.woff2) format("woff2")}
+.fa-solid{font-family:"Font Awesome 6 Free";font-weight:900;font-style:normal;display:inline-block}
+.fa-check:before{content:"\f00c"}
+.fa-cookie:before{content:"\f563"}
+.fa-eye:before{content:"\f06e"}
+.fa-eye-slash:before{content:"\f070"}
+.fa-file-export:before{content:"\f56e"}
+.fa-file-import:before{content:"\f56f"}
+.fa-gear:before{content:"\f013"}
+.fa-globe:before{content:"\f0ac"}
+.fa-key:before{content:"\f084"}
+.fa-location-crosshairs:before{content:"\f601"}
+.fa-magnifying-glass:before{content:"\f002"}
+.fa-minus:before{content:"\f068"}
+.fa-note-sticky:before{content:"\f249"}
+.fa-pen:before{content:"\f304"}
+.fa-pen-clip:before{content:"\f305"}
+.fa-play:before{content:"\f04b"}
+.fa-rocket:before{content:"\f135"}
+.fa-signal:before{content:"\f012"}
+.fa-tag:before{content:"\f02b"}
+.fa-terminal:before{content:"\f120"}
+.fa-trash-can:before{content:"\f2ed"}
+.fa-user:before{content:"\f007"}
+.fa-user-plus:before{content:"\f234"}
+.fa-user-slash:before{content:"\f506"}
+.fa-xmark:before{content:"\f00d"}
