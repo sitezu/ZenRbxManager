@@ -20,7 +20,6 @@
 .fa-key:before{content:"\f084"}
 .fa-location-crosshairs:before{content:"\f601"}
 .fa-magnifying-glass:before{content:"\f002"}
-.fa-minus:before{content:"\f068"}
 .fa-note-sticky:before{content:"\f249"}
 .fa-pen:before{content:"\f304"}
 .fa-pen-clip:before{content:"\f305"}
@@ -42,11 +41,11 @@
         * { box-sizing: border-box; user-select: none; outline: none !important; }
         
         html, body {
-            background: transparent !important;
+            width: 100%; height: 100%; margin: 0;
+            background: #10101a;
             color: #f8fafc;
             overflow: hidden;
             font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-            display: flex; align-items: center; justify-content: center; height: 100vh;
         }
 
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -84,11 +83,10 @@
 <style>
   /* ZenTask-inspired visual layer. Source inspiration: sitezu/Zentask (MIT). */
   :root { --th-400: 139 137 255; --th-500: 99 102 241; --th-600: 79 70 229; }
-  html, body { background-color:#030108 !important; background-image:linear-gradient(to right,rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.028) 1px,transparent 1px) !important; background-size:40px 40px !important; }
-  body::before,body::after{content:'';position:fixed;z-index:0;pointer-events:none;width:55vw;height:55vw;border-radius:50%;filter:blur(90px);opacity:.25}
-  body::before{left:-18vw;top:-30vw;background:radial-gradient(circle,#6366f1,transparent 67%)}
-  body::after{right:-22vw;bottom:-35vw;background:radial-gradient(circle,#a855f7,transparent 67%)}
-  .widget-container { z-index:1; background:linear-gradient(158deg,#151522 0%,#0f101a 72%) !important;border-color:rgba(150,140,244,.25) !important;border-radius:22px !important;box-shadow:0 40px 110px rgba(4,3,20,.82),0 0 85px rgba(99,102,241,.18),inset 0 1px rgba(255,255,255,.07) !important; }
+  /* The application IS the viewport, not a widget sitting on a mock desktop. */
+  html, body { width:100%; height:100%; background:#10101a !important; background-image:none !important; }
+  body::before, body::after { content:none !important; }
+  .widget-container { width:100%; height:100%; min-height:0; background:#141522 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; }
   .widget-container .header {background:linear-gradient(90deg,rgba(99,102,241,.095),rgba(168,85,247,.055)) !important;border-bottom-color:rgba(255,255,255,.08) !important;padding-top:12px;padding-bottom:12px;}
   .brand-area > div:first-child {background:linear-gradient(135deg,#6366f1,#a855f7) !important;border-radius:9px !important;box-shadow:0 8px 22px rgba(99,102,241,.42) !important;}
   .brand-area .title {font-weight:900;letter-spacing:.06em;}
@@ -104,39 +102,41 @@
   #filter-all.bg-th-500,#filter-online.bg-th-500,#filter-ingame.bg-th-500,#filter-away.bg-th-500,#filter-offline.bg-th-500{background:rgba(99,102,241,.22) !important;border:1px solid rgba(139,137,255,.5) !important;box-shadow:none !important;}
   textarea:focus,input:focus,select:focus{border-color:rgba(139,137,255,.75) !important;}
   button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #b9abff !important;outline-offset:2px !important;}
-  @media (max-width:780px){.widget-container{width:97vw !important;height:92vh !important;}.widget-container .account-grid{grid-template-columns:20px minmax(85px,1fr) 75px 55px minmax(80px,1fr) 70px;gap:5px;}}
+  @media (max-width:780px){
+    .workspace { flex-direction:column; overflow-y:auto !important; }
+    .workspace .account-panel { min-height:360px; flex:none; }
+    .workspace .execution-panel { width:100%; min-height:260px; flex:none; }
+    .widget-container .account-grid{grid-template-columns:20px minmax(85px,1fr) 75px 55px minmax(80px,1fr) 70px;gap:5px;}
+  }
+  @media (max-width:520px){
+    .widget-container .account-grid{min-width:620px;}
+    #accountList{min-width:620px;}
+    .account-table{overflow-x:auto !important;}
+    .workspace .account-panel{min-height:390px;}
+  }
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important;}}
 </style>
 </head>
 <body class="text-slate-200 font-sans select-none bg-transparent overflow-hidden">
 
-    <div class="absolute top-0 left-0 w-full h-4 z-50 cursor-move" style="-webkit-app-region: drag;"></div>
+    <!-- Full-viewport desktop workspace; OS/browser provides real window controls. -->
+    <div id="widget" class="widget-container flex flex-col overflow-hidden">
 
-    <!-- Fixed flex container with flexible sizing to prevent UI clipping -->
-    <div id="widget" class="widget-container w-[940px] max-w-[95vw] h-[540px] max-h-[90vh] bg-[#12151e] border border-[#1d2331] rounded-2xl shadow-2xl shadow-panel relative flex flex-col overflow-hidden">
-
-        <!-- Header -->
-        <div class="header px-4 py-2.5 bg-[#0c0e14] border-b border-borderSubtle flex items-center justify-between shrink-0 cursor-move" style="-webkit-app-region: drag;">
-            <div class="brand-area flex items-center space-x-2.5 z-10" style="-webkit-app-region: no-drag;">
-                <div class="w-6 h-6 rounded-full bg-th-500 flex items-center justify-center shadow-th-glow transition-colors duration-300">
-                    <span class="text-white font-black text-xs">Z</span>
+        <!-- Application header, not a simulated browser/title bar. -->
+        <header class="header px-5 py-3 bg-[#0c0e14] border-b border-borderSubtle flex items-center shrink-0">
+            <div class="brand-area flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-th-500 flex items-center justify-center shadow-th-glow">
+                    <span class="text-white font-black text-sm">Z</span>
                 </div>
-                <div class="title font-bold text-xs tracking-wider text-slate-100 uppercase">
-                    ZenRbxManager
-                </div>
-                <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
+                <h1 class="title font-black text-sm tracking-wider text-slate-100 uppercase">ZENRBXMANAGER</h1>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" aria-label="App running" title="App running"></span>
             </div>
+        </header>
 
-            <div class="window-controls flex items-center space-x-3 text-slate-500 z-10" style="-webkit-app-region: no-drag;">
-                <button onclick="windowAction('minimize')" class="hover:text-slate-200 hover:scale-110"><i class="fa-solid fa-minus text-[11px]"></i></button>
-                <button onclick="windowAction('close')" class="hover:text-rose-400 hover:scale-110"><i class="fa-solid fa-xmark text-xs"></i></button>
-            </div>
-        </div>
-
-        <div class="flex flex-1 p-3 bg-panel gap-3 min-h-0 overflow-hidden">
+        <main class="workspace flex flex-1 p-4 bg-panel gap-4 min-h-0 overflow-hidden">
             
             <!-- LEFT PANEL: Account Management -->
-            <div class="flex-1 flex flex-col gap-2 min-w-0 min-h-0">
+            <section class="account-panel flex-1 flex flex-col gap-2 min-w-0 min-h-0" aria-label="Accounts">
                 
                 <!-- Clean Search Bar -->
                 <div class="relative flex items-center shrink-0">
@@ -154,7 +154,7 @@
                 </div>
 
                 <!-- Account List Table Container -->
-                <div class="flex flex-col flex-1 min-h-0 bg-inputBg border border-borderSubtle rounded-xl overflow-hidden">
+                <div class="account-table flex flex-col flex-1 min-h-0 bg-inputBg border border-borderSubtle rounded-xl overflow-hidden">
                     
                     <!-- Table Header -->
                     <div class="account-grid bg-[#0c0e14] border-b border-borderSubtle px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
@@ -195,10 +195,10 @@
                         <i class="fa-solid fa-rocket"></i> Launch Selected
                     </button>
                 </div>
-            </div>
+            </section>
 
             <!-- RIGHT PANEL -->
-            <div class="w-[280px] flex flex-col gap-2 shrink-0 min-h-0">
+            <aside class="execution-panel w-[280px] flex flex-col gap-2 shrink-0 min-h-0" aria-label="Execution center">
                 
                 <!-- Execution Header -->
                 <div class="bg-inputBg p-2.5 rounded-xl border border-borderSubtle flex justify-between items-center shrink-0">
@@ -238,8 +238,8 @@
                     <textarea id="descInput" oninput="updateCharCount(); queueNoteSave()" maxlength="250" class="flex-1 w-full bg-inputBg border border-borderSubtle rounded-xl p-2.5 text-xs text-slate-200 focus:border-th-400 resize-none shadow-inner min-h-[60px]" placeholder="Account operational notes..."></textarea>
                 </div>
 
-            </div>
-        </div>
+            </aside>
+        </main>
     </div>
 
     <!-- MODAL: ADD ACCOUNT -->

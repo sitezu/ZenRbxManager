@@ -25,38 +25,17 @@ for y in range(H):
         v = max(0, 1 - math.hypot((x - 955) / 950, (y - 135) / 750))
         px[x, y] = (round(7 + 7*t + 12*v), round(7 + 4*t + 5*v), round(17 + 11*t + 25*v))
 
-# Ambient glow sits BEHIND the grid and content.
+# Ambient glow is a brand backdrop, not a mock desktop or application grid.
 glow = Image.new('RGBA', (W, H), (0, 0, 0, 0))
 g = ImageDraw.Draw(glow)
 g.ellipse((720, -390, 1570, 460), fill=(115, 72, 247, 120))
 g.ellipse((-470, 180, 370, 1010), fill=(74, 66, 191, 75))
-glow = glow.filter(ImageFilter.GaussianBlur(130))
-base = Image.alpha_composite(base.convert('RGBA'), glow)
-grid = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-gd = ImageDraw.Draw(grid)
-for x in range(0, W, 64): gd.line((x, 0, x, H), fill=(110, 105, 176, 13))
-for y in range(0, H, 64): gd.line((0, y, W, y), fill=(110, 105, 176, 13))
-base = Image.alpha_composite(base, grid)
+base = Image.alpha_composite(base.convert('RGBA'), glow.filter(ImageFilter.GaussianBlur(130)))
 
-# Real interface capture, with soft frame and shadow.
-shot = Image.open(ROOT / 'site/app-preview.webp').convert('RGB')
-shot = shot.crop((80, 105, 1930, 1190))
-shot.thumbnail((695, 420), Image.Resampling.LANCZOS)
-frame = Image.new('RGBA', (shot.width + 24, shot.height + 24), (0, 0, 0, 0))
-fd = ImageDraw.Draw(frame)
-fd.rounded_rectangle((0, 0, frame.width - 1, frame.height - 1), radius=19,
-                     fill=(28, 25, 53, 255), outline=(119, 102, 221, 145), width=2)
-frame.paste(shot, (12, 12))
-frame = frame.rotate(5, resample=Image.Resampling.BICUBIC, expand=True)
-shadow = Image.new('RGBA', frame.size, (0, 0, 0, 0))
-shadow.putalpha(frame.getchannel('A'))
-shadow = shadow.filter(ImageFilter.GaussianBlur(26))
-# Right-hand device breaks the frame edge deliberately for depth.
-x, y = 667, 142
-black_shadow = Image.new('RGBA', frame.size, (0, 0, 0, 0))
-black_shadow.paste((4, 2, 13, 185), (0, 0, frame.width, frame.height), shadow.getchannel('A'))
-base.alpha_composite(black_shadow, (x + 18, y + 28))
-base.alpha_composite(frame, (x, y))
+# The real UI, shown directly; no fake browser header, bevel, border, or window frame.
+shot = Image.open(ROOT / 'site/app-preview.webp').convert('RGBA')
+shot.thumbnail((740, 530), Image.Resampling.LANCZOS)
+base.alpha_composite(shot, (650, 136))
 
 # Calm left-side hierarchy; text deliberately stays outside the UI image.
 d = ImageDraw.Draw(base)

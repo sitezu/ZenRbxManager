@@ -11,6 +11,7 @@ The setup candidate from [Windows app / size check](https://github.com/sitezu/Ze
 ## Run through the app
 
 - [ ] Install using the wizard without requiring administrator permissions. Confirm the Start Menu shortcut opens the app.
+- [ ] Confirm the app UI fills the window edge to edge, with `ZENRBXMANAGER` as the application header—no simulated browser header, fake close buttons, outer mock border, or grid desktop. Resize the window and confirm the account list and execution panel remain usable.
 - [ ] Confirm an empty account list appears on a new installation, with no sample accounts.
 - [ ] Add an account you own through the browser sign-in flow. If it fails, note the error **without including any cookie or password**. If you choose to test cookie import, use your own cookie and keep it private.
 - [ ] Restart the app. Confirm the account still appears, and that search, status filtering, name privacy and selecting work.

@@ -47,7 +47,14 @@ function updateState(state) {
     const i=document.createElement('i');i.className='fa-solid '+icon;btn.append(i);btn.addEventListener('click',cb);actions.append(btn);
   }row.append(actions);list.append(row);
  }
- if(!state.accounts.length){const empty=document.createElement('div');empty.id='emptyStateNotice';empty.className='h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-2';empty.textContent='No accounts added yet. Click “Add New Account” to get started.';list.append(empty);}
+ if(!state.accounts.length){
+  const empty=document.createElement('div');empty.id='emptyStateNotice';
+  empty.className='h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 gap-2';
+  const icon=document.createElement('i');icon.className='fa-solid fa-user-slash text-2xl text-th-400';icon.setAttribute('aria-hidden','true');
+  const title=document.createElement('p');title.className='text-sm font-bold text-slate-300';title.textContent='Your space is ready.';
+  const hint=document.createElement('p');hint.className='text-xs';hint.textContent='Add your first account to get started.';
+  empty.append(icon,title,hint);list.append(empty);
+ }
  if(selectedName&&!state.accounts.some(x=>x.username===selectedName)){selectedName=null;$('descInput').value='';updateCharCount();}
  applyFilter();applySettings();
 }
@@ -105,7 +112,6 @@ async function runUtility(type){if(type==='export'){
  }else if(type==='import'){$('configFile').click();}else if(type==='cookies'){
  if(confirm('Remove old temporary login browser profiles? Saved account cookies will be kept.'))await execute('clear_cache');}
  closeSettingsModal();}
-async function windowAction(action){await execute('window',{action});}
 const list=$('accountList');
 list.addEventListener('dragstart',e=>{dragged=e.target.closest('.account-row');if(dragged)e.dataTransfer.effectAllowed='move';});
 list.addEventListener('dragover',e=>{if(!dragged)return;e.preventDefault();const row=e.target.closest('.account-row');if(row&&row!==dragged){const bounds=row.getBoundingClientRect();list.insertBefore(dragged,e.clientY<bounds.top+bounds.height/2?row:row.nextSibling);}});

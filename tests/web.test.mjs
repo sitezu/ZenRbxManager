@@ -91,3 +91,20 @@ test('account names from state render as text rather than HTML', async () => {
     assert.equal(window.document.querySelector('.account-name').textContent, '<img src=x onerror=alert(1)>');
   } finally { dom.window.close(); }
 });
+
+
+test('workspace occupies the window without fake chrome or a grid desktop', async () => {
+  const { dom, window } = createApp();
+  try {
+    await settle();
+    const doc = window.document;
+    assert.equal(doc.querySelector('h1').textContent, 'ZENRBXMANAGER');
+    assert.ok(doc.querySelector('main.workspace > section.account-panel'));
+    assert.ok(doc.querySelector('main.workspace > aside.execution-panel'));
+    assert.equal(doc.querySelector('.window-controls'), null);
+    assert.equal(doc.querySelector('[onclick^="windowAction"]'), null);
+    assert.equal(doc.querySelector('#widget').classList.contains('rounded-2xl'), false);
+    assert.match(html, /\.widget-container \{ width:100%; height:100%;/);
+    assert.match(html, /background-image:none !important/);
+  } finally { dom.window.close(); }
+});
