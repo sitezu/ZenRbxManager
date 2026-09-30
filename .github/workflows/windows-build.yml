@@ -19,15 +19,15 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - name: Test desktop interface
+      - name: Test original HTML design reference
         run: npm ci --ignore-scripts && npm test
-      - name: Test Python backend
+      - name: Test native desktop UI and Python backend
         run: python -m pytest -q
       - name: Build portable exe
         run: >-
           pyinstaller --noconfirm --clean --onefile --windowed --name ZenRbxManager
-          --icon assets-icon.ico --add-data "web;web"
-          --exclude-module tkinter --exclude-module matplotlib --exclude-module numpy
+          --icon assets-icon.ico
+          --exclude-module matplotlib --exclude-module numpy
           --exclude-module pandas --exclude-module scipy --exclude-module PySide6
           --exclude-module PyQt6 --exclude-module IPython
           src/main.py
@@ -39,7 +39,7 @@ jobs:
           size = exe.stat().st_size
           print(f'EXE size: {size:,} bytes ({size / 1024**2:.1f} MiB)')
           assert size < 100_000_000, 'EXE exceeds 100 MB limit'
-      - name: Verify packaged app without an account
+      - name: Smoke-test native packaged window without an account
         shell: pwsh
         run: |
           $process = Start-Process -FilePath (Resolve-Path 'dist/ZenRbxManager.exe') -ArgumentList '--self-test' -Wait -PassThru
@@ -61,7 +61,7 @@ jobs:
           if ($setup.Length -ge 100000000) { throw 'Setup exceeds 100 MB' }
           $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $($setup.Name)" | Out-File dist/SETUP-SHA256SUMS.txt -Encoding ascii
-      - name: Smoke-test silent install, installed app, and uninstall
+      - name: Smoke-test silent install, installed native window, and uninstall
         shell: pwsh
         run: |
           $folder = Join-Path $env:RUNNER_TEMP 'ZenRbxManager-Installer-Smoke'

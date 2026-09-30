@@ -1,11 +1,9 @@
 import json
-import threading
-from http.client import HTTPConnection
 
 import pytest
 
 from zen_backend import ZenBackend
-from main import make_server
+from main import run_self_test
 
 
 class FakeManager:
@@ -107,34 +105,15 @@ def test_config_export_import_and_copy(backend):
         backend.action('settings', {'key': 'startup', 'value': 'yes'})
 
 
-def test_package_self_test_loads_ui_and_loopback_api():
-    from main import run_self_test
+def test_package_self_test_loads_native_ui():
     assert run_self_test() == 0
 
 
-def test_server_security_and_static(backend):
-    server = make_server(backend)
-    worker = threading.Thread(target=server.serve_forever, daemon=True)
-    worker.start()
-    conn = HTTPConnection('127.0.0.1', server.server_port)
-    base = f'http://127.0.0.1:{server.server_port}'
-    try:
-        conn.request('GET', '/', headers={'Host': f'127.0.0.1:{server.server_port}'})
-        response = conn.getresponse(); html = response.read().decode()
-        assert response.status == 200 and 'ZenRbxManager' in html
-        import re
-        token = json.loads(re.search(r'const ZEN_TOKEN = (.*?);', html).group(1))
-        headers = {'Host': f'127.0.0.1:{server.server_port}', 'Origin': base,
-                   'Content-Type': 'application/json', 'X-Zen-Token': token}
-        conn.request('POST', '/api/state', '{}', {**headers, 'Origin': 'https://evil.example'})
-        assert conn.getresponse().status == 403
-        conn.close(); conn = HTTPConnection('127.0.0.1', server.server_port)
-        conn.request('POST', '/api/state', '{}', headers)
-        response=conn.getresponse(); data=json.loads(response.read())
-        assert response.status == 200 and len(data['accounts']) == 2
-        conn.request('GET', '/assets/style.css', headers={'Host': f'127.0.0.1:{server.server_port}'})
-        response=conn.getresponse(); assert response.status == 200 and b'account-grid' not in response.read()  # custom layout is in HTML
-        conn.request('GET', '/assets/../src/main.py', headers={'Host': f'127.0.0.1:{server.server_port}'})
-        assert conn.getresponse().status == 404
-    finally:
-        conn.close(); server.shutdown(); server.server_close(); worker.join(timeout=3)
+
+def test_windows_entry_point_has_no_browser_webview_or_http_server():
+    from pathlib import Path
+    source = (Path(__file__).resolve().parents[1] / 'src/main.py').read_text()
+    assert 'NativeApp(root, backend)' in source
+    assert 'ThreadingHTTPServer' not in source
+    assert 'subprocess.Popen' not in source
+    assert '--app=' not in source

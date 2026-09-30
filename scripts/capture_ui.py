@@ -1,4 +1,4 @@
-"""Capture the real, empty-state full-viewport app for README and website.
+"""Capture the legacy HTML design reference, NOT the current native app.
 
 Requires Playwright Chromium. Mocks only the account API: no user data, cookies,
 Roblox traffic or external resources are used.

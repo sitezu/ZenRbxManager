@@ -49,7 +49,7 @@ def test_website_has_real_product_copy_and_valid_internal_links():
     assert (ROOT / 'site/og.png').stat().st_size < 1_000_000
 
 
-def test_desktop_visual_layer_keeps_functional_ui():
+def test_html_visual_reference_keeps_original_ui():
     html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
     assert 'ZenTask-inspired visual layer' in html
     assert 'linear-gradient(135deg,#6366f1,#a855f7)' in html
@@ -59,6 +59,7 @@ def test_desktop_visual_layer_keeps_functional_ui():
     assert 'background-color: #090a0f;' in html
     assert '/*ZEN_TOKEN*/' not in html
     assert 'id="accountList"' in html
+    assert (ROOT / 'src/native_ui.py').exists()
     assert 'data-username="ZenMaster99"' not in html
 
 

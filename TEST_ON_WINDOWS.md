@@ -6,14 +6,14 @@ The setup candidate from [Windows app / size check](https://github.com/sitezu/Ze
 
 1. Download the `ZenRbxManager-Setup-Candidate` artifact from the newest successful Windows build run. Extract `ZenRbxManager-Setup-candidate.exe` and `SETUP-SHA256SUMS.txt`.
 2. In PowerShell, run `(Get-FileHash .\ZenRbxManager-Setup-candidate.exe -Algorithm SHA256).Hash.ToLower()` and compare the result with `SETUP-SHA256SUMS.txt`.
-3. Back up any existing `AccountManagerData` folder. Install on a Windows 10 or 11 machine with Roblox and Edge or Chrome installed. The build is unsigned, so Windows may warn you.
+3. Back up any existing `AccountManagerData` folder. Install on a Windows 10 or 11 machine with Roblox installed. An installed sign-in browser is only needed for the optional Roblox browser-login flow; the app itself must not open Edge or Chrome. The build is unsigned, so Windows may warn you.
 
 ## Run through the app
 
 - [ ] Install using the wizard without requiring administrator permissions. Confirm the Start Menu shortcut opens the app.
-- [ ] Confirm the app UI fills the window edge to edge, with `ZENRBXMANAGER` as the application header—no simulated browser header, fake close buttons, outer mock border, or grid desktop. Resize the window and confirm the account list and execution panel remain usable.
+- [ ] Confirm that a **real Windows-native window** opens, not an Edge/Chrome app window or WebView. `ZENRBXMANAGER` should head the edge-to-edge workspace—no simulated browser header, fake close buttons, outer mock border, or grid desktop. Resize the window and confirm the account list and execution panel remain usable.
 - [ ] Confirm an empty account list appears on a new installation, with no sample accounts.
-- [ ] Add an account you own through the browser sign-in flow. If it fails, note the error **without including any cookie or password**. If you choose to test cookie import, use your own cookie and keep it private.
+- [ ] Add an account you own through the optional browser sign-in flow (only login may open a browser; the manager must stay native). If it fails, note the error **without including any cookie or password**. If you choose to test cookie import, use your own cookie and keep it private.
 - [ ] Restart the app. Confirm the account still appears, and that search, status filtering, name privacy and selecting work.
 - [ ] Edit its alias and note. Restart again and verify they persisted. Test theme changes and settings persistence.
 - [ ] With Roblox installed, launch that account into Roblox Home. Verify the correct account opens.

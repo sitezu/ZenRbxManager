@@ -19,19 +19,19 @@ An independent Windows account workspace for the Roblox accounts **you own**. Ke
 </div>
 
 > [!IMPORTANT]
-> **Preview, not a verified Roblox release.** The portable EXE is published and its download checksum was verified. The newer setup installer is an **Actions test artifact, not a release**. Automated tests cover the interface, backend, packaged startup, size limit, installation and uninstall; **live Roblox sign-in and game launch still need testing on Windows**. The screenshots below show the current source on `main`, which may be newer than the published portable preview.
+> **Preview, not a verified Roblox release.** The portable EXE is published and its download checksum was verified. The newer setup installer is an **Actions test artifact, not a release**. Automated tests cover the interface, backend, packaged startup, size limit, installation and uninstall; **live Roblox sign-in and game launch still need testing on Windows**. The screenshots below show the **new native UI** on `main`. The published v0.1.0-preview is an **older browser-shell build**, not the native app.
 
 ---
 
 ## A better place for the accounts you actually use
 
-One account for one game, another for a different group, and a third you haven't touched in months. ZenRbxManager gives those accounts a home: a clean list, useful context, and launch controls without a pretend desktop frame around the app. The interface itself fills its window edge to edge.
+One account for one game, another for a different group, and a third you haven't touched in months. ZenRbxManager gives those accounts a home: a clean list, useful context, and launch controls in a **real native desktop window**. No Edge/Chrome app-mode shell, WebView, HTTP server, or fake window frame.
 
 <img src="site/readme-features.png" alt="Six ZenRbxManager features: account list, launching, notes, settings, local storage and honest presence" width="100%">
 
 ### See the workspace
 
-These are **real captures of the current empty-state interface**, not a populated demo account. No credentials or account cookies appear in them.
+These are **real captures of the native Tk desktop window** on a Linux test display, not a populated demo account. Windows uses its actual OS title bar. No credentials or account cookies appear in them.
 
 <img src="site/app-preview.webp" alt="The full-viewport ZenRbxManager workspace with account list, filters and launch controls" width="100%">
 
@@ -56,23 +56,23 @@ Presence can show Online or In-Game when Roblox supplies it. If a reliable resul
 ### Portable preview · published
 
 1. Download **[`ZenRbxManager-v0.1.0-preview.exe`](https://github.com/sitezu/ZenRbxManager/releases/download/v0.1.0-preview/ZenRbxManager-v0.1.0-preview.exe)** from the [v0.1.0-preview release](https://github.com/sitezu/ZenRbxManager/releases/tag/v0.1.0-preview). Compare its SHA-256 hash with the release's `SHA256SUMS.txt`.
-2. Keep the EXE in a folder where it can create `AccountManagerData`. Open it on **Windows 10/11 with Edge or Chrome installed**; install Roblox before trying to launch a game.
+2. Keep the EXE in a folder where it can create `AccountManagerData`. This **older portable preview** uses Edge or Chrome for its app window; install Roblox before trying to launch a game. To test the native window, use the newer setup candidate below.
 3. Choose **Add New Account**. Browser sign-in can download a matching WebDriver on first use. Only use accounts you own.
 
-**Important:** This published portable preview predates some changes visible on `main`; it is **not** the newest installer candidate. It is unsigned, so Windows SmartScreen may display a warning. Inspect the source before trusting an account-management app.
+**Important:** This published portable preview predates the native Tk rewrite; it **still opens a browser-based app window**. Do not download it to evaluate the new native UI. It is unsigned, so Windows SmartScreen may display a warning. Inspect the source before trusting an account-management app.
 
 ### Prefer a setup wizard?
 
-The [latest successful Windows build](https://github.com/sitezu/ZenRbxManager/actions/workflows/windows-build.yml) provides a **`ZenRbxManager-Setup-Candidate`** artifact. Sign in to GitHub, open the successful run, download the artifact ZIP, extract `ZenRbxManager-Setup-candidate.exe`, and verify it using the included `SETUP-SHA256SUMS.txt`.
+The [latest successful Windows build](https://github.com/sitezu/ZenRbxManager/actions/workflows/windows-build.yml) **for the native-UI commit** provides a **`ZenRbxManager-Setup-Candidate`** artifact. Older Actions artifacts are browser-shell builds; check the run’s commit. Sign in to GitHub, open the successful run, download the artifact ZIP, extract `ZenRbxManager-Setup-candidate.exe`, and verify it using the included `SETUP-SHA256SUMS.txt`.
 
-This **per-user Inno Setup candidate** adds a Start Menu shortcut, offers an optional desktop shortcut, and includes an uninstaller that leaves saved accounts alone. CI checks the under-100 MB limit, starts the packaged UI/backend, silently installs the app, starts the installed app, and uninstalls it. **None of that verifies a real Roblox login or game launch.** Please use the [real-Windows test checklist](TEST_ON_WINDOWS.md), report non-sensitive failures, and **do not expect a setup release until the live tests pass**.
+This **per-user Inno Setup candidate** adds a Start Menu shortcut, offers an optional desktop shortcut, and includes an uninstaller that leaves saved accounts alone. CI checks the under-100 MB limit, creates a real native Tk window (without a Roblox account), silently installs the app, starts the installed native window, and uninstalls it. **None of that verifies a real Roblox login or game launch.** Please use the [real-Windows test checklist](TEST_ON_WINDOWS.md), report non-sensitive failures, and **do not expect a setup release until the live tests pass**.
 
 > [!CAUTION]
 > Back up `AccountManagerData` before upgrades, reinstalls or migrations. Hardware-encrypted vaults can be tied to the original computer; an upstream password-encrypted vault may need migration in the original app. **Never paste a password, `.ROBLOSECURITY` cookie, auth ticket or account data file into an issue.**
 
-## Built for a small footprint, not a big browser bundle
+## A real native window, no app WebView
 
-The Windows executable uses an **installed Edge or Chrome browser in app mode** to display its local interface. It is **not an Electron binary**, and it does not bundle Chromium or Roblox. The app's own content is full-viewport with no simulated browser header, window buttons, grid desktop, or surrounding mock window. The local interface talks to a token-protected loopback API; Roblox requests go to Roblox. Installed browsers, optional WebDriver downloads, Roblox itself, and saved data are outside the executable size limit.
+The **current native candidate** draws the two-column interface with Windows/Tk widgets and calls the existing Python account backend **directly**. The program does **not** start a local web server, launch Edge/Chrome for its UI, host a WebView, or bundle Electron/Chromium. Its maximized native window fills the usable screen, with Windows providing the real title bar and window controls. **Only Roblox's optional browser sign-in flow opens an external browser.** Roblox, optional WebDriver downloads, and saved data are outside the executable's 100 MB size limit. The older published portable preview still uses the previous browser-shell architecture.
 
 | What matters | How it works |
 |:--|:--|
@@ -95,7 +95,7 @@ python src/main.py
 python -m pytest -q
 ```
 
-The application UI is a **single self-contained file** at [`web/index.html`](web/index.html): styles, icon font and interactive JavaScript are embedded. It still needs the local Python backend for account operations. When changing [`web/assets/app.js`](web/assets/app.js), run `python scripts/embed_app_js.py` to refresh the inlined copy; the frontend tests reject out-of-sync copies. Frontend tests: `npm ci --ignore-scripts && npm test`. To regenerate the empty-state visuals on a machine with Playwright Chromium and Pillow: `python scripts/capture_ui.py`, then `python scripts/make_banner.py` and `python scripts/make_readme_visuals.py`. These screenshots mock an **empty local state**, never a real account.
+The running app lives in [`src/native_ui.py`](src/native_ui.py) and [`src/main.py`](src/main.py). [`web/index.html`](web/index.html) is retained **only as the original HTML design reference**; opening it is not a native-app test. The Python GUI test uses real Tk widgets with a fake empty account store. Run it on Linux with `xvfb-run -a python -m pytest -q` or run `python -m pytest -q` on Windows. HTML reference tests: `npm ci --ignore-scripts && npm test`. To regenerate the native screenshots on Linux with Pillow and a virtual display: `xvfb-run -a python scripts/capture_native.py`, then `python scripts/make_banner.py` and `python scripts/make_readme_visuals.py`. No real Roblox account is used in screenshots.
 
 <details>
 <summary><b>How are releases tested?</b></summary>
