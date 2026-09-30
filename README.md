@@ -1,8 +1,8 @@
 <div align="center">
   <img src="site/og.svg" alt="ZenRbxManager — your Roblox accounts, in one place" width="100%">
 
-  **A calmer account workspace for Windows.**  
-  Organize accounts, launch into Roblox, and keep local notes without the clutter.
+  **Switch accounts often? Keep them together and get back to the game.**  
+  Labels, notes and launches in one small Windows app.
 
   [🌐 Website](https://sitezu.github.io/ZenRbxManager/) · [🛠 Run from source](#run-from-source) · [📦 Windows builds](#building-and-size-limit)
 </div>
@@ -11,7 +11,9 @@
 
 > **Release status:** A downloadable Windows release has not been published or verified yet. See the instructions below; the CI workflow will enforce the under-100-MB executable size limit.
 
-Windows 10/11 Roblox account manager using the supplied ZenRbxManager HTML design and the account storage/Roblox launch/browser-login backend from [evanovar/RobloxAccountManager](https://github.com/evanovar/RobloxAccountManager). The upstream project is GPL-3.0; this derivative includes its original LICENSE and must remain GPL-compatible when redistributed. Not affiliated with Roblox.
+If you have more than one Roblox account, you know the routine: find the right login, remember what you were doing, and get back to the game. ZenRbxManager keeps your account list, notes and launch controls together on your PC. It is an independent project, not affiliated with Roblox.
+
+The account backend is adapted from [evanovar/RobloxAccountManager](https://github.com/evanovar/RobloxAccountManager) (GPL-3.0). Its license is included in this repository; redistributions must follow its terms.
 
 ## Features
 
@@ -55,16 +57,17 @@ The two demonstration accounts and alert-only actions have been removed. Roblox 
 
 `site/index.html` is the product website, inspired by [sitezu/Zentask](https://github.com/sitezu/Zentask). It is a static, dependency-free page with no ZenTask app claims or assets. The desktop UI in `web/index.html` uses the same dark-grid/indigo-violet styling. See [ATTRIBUTION.md](ATTRIBUTION.md) for upstream credits.
 
-When this project is pushed to `sitezu/ZenRbxManager`, enable **Settings → Pages → Build and deployment → Source: GitHub Actions**. The `.github/workflows/pages.yml` workflow then publishes only `site/` to `https://sitezu.github.io/ZenRbxManager/`. Before publication the GitHub and website links are placeholders for the intended repository, not live download links.
+The repository exists at `sitezu/ZenRbxManager`, but Pages is not live until the website files are pushed and Pages is enabled. In **Settings → Pages → Build and deployment**, choose **Source: GitHub Actions**. The `.github/workflows/pages.yml` workflow publishes only `site/` to `https://sitezu.github.io/ZenRbxManager/`. Until deployment completes, that link will return 404. The website does not advertise a downloadable executable without a tested release.
 
 ## Publish to your GitHub account
 
-Do **not** use an exposed token. Revoke the previously posted token, then create an empty repository named `ZenRbxManager` under `sitezu` using GitHub's website or an authenticated `gh` CLI on your own computer. From this project directory:
+The public repository `sitezu/ZenRbxManager` already exists with an initial README commit. The local workspace copy has been merged with that initial commit, so it can be pushed normally once authenticated:
 
 ```bash
-git remote add origin https://github.com/sitezu/ZenRbxManager.git
-git branch -M main
+git remote -v  # origin should point to https://github.com/sitezu/ZenRbxManager.git
 git push -u origin main
 ```
 
-The workspace copy is initialized as a local Git repository. If you downloaded the ZIP instead, run `git init -b main`, `git add .`, and `git commit -m "Initial ZenRbxManager app and site"` before adding the remote. Creating a remote repository in your GitHub account requires a safe authenticated session. Never put credentials in the remote URL or commit history.
+If you are using the ZIP instead of this workspace, **clone the existing GitHub repository first**, copy the ZIP's project files into the cloned folder (replacing its starter README), then run `git add .`, `git commit -m "Add ZenRbxManager app and website"`, and `git push`. Do not initialize a separate unrelated Git history from the ZIP and force-push over the repository.
+
+Use your own GitHub authentication or approve a GitHub CLI device sign-in. Do **not** paste or reuse the GitHub token exposed earlier. Never include credentials in a remote URL or commit.
